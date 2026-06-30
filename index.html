@@ -3,144 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>บันทึกผลการผลิตเครื่องจักร</title>
+    <title>บันทึกการทำงาน</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ปลั๊กอินสำหรับสร้างรูปภาพและไฟล์ Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Sarabun', sans-serif; }</style>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #000000; color: #f8fafc; }
+        .tab-btn.active { color: #eab308; border-bottom: 2px solid #eab308; }
+        .glass-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.4); }
+    </style>
 </head>
-<body class="bg-slate-200 min-h-screen p-3 text-slate-800">
+<body class="min-h-screen pb-24">
 
-    <!-- บีบความกว้างให้เท่าหน้าจอสมาร์ทโฟนเป๊ะๆ (max-w-md) -->
-    <div class="max-w-md mx-auto space-y-4 pb-12">
-        
-        <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-md flex justify-between items-center">
-            <div>
-                <h1 class="text-lg font-bold">🛠️ บันทึกสถิติเครื่องจักร</h1>
-                <p class="text-slate-400 text-xs">Mobile Tracking System V2</p>
+    <div class="fixed bottom-0 w-full bg-slate-950 border-t border-slate-800 flex justify-around p-3 z-50 text-slate-400 text-xs font-bold shadow-[0_-10px_25px_rgba(0,0,0,0.8)]">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex flex-col items-center p-2 w-1/3">
+            <span class="text-xl mb-1">📊</span> ภาพรวม
+        </button>
+        <button onclick="switchTab('record')" id="tab-record" class="tab-btn flex flex-col items-center p-2 w-1/3">
+            <span class="text-xl mb-1">📝</span> บันทึก
+        </button>
+        <button onclick="switchTab('export')" id="tab-export" class="tab-btn flex flex-col items-center p-2 w-1/3">
+            <span class="text-xl mb-1">📤</span> ส่งออก
+        </button>
+    </div>
+
+    <div class="bg-slate-950 p-4 flex justify-between items-center border-b border-blue-900 shadow-md sticky top-0 z-40">
+        <div>
+            <h1 class="text-lg font-bold text-blue-500">🏭 บันทึกการทำงาน</h1>
+            <p id="statusDot" class="text-xs text-yellow-500">⏳ กำลังเชื่อมต่อฐานข้อมูล...</p>
+        </div>
+    </div>
+
+    <div class="max-w-md mx-auto p-4 space-y-4">
+
+        <div id="page-dashboard" class="space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="font-bold text-base text-white flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span> สถิติผลงานประจำวัน
+                </h2>
+                <div class="bg-blue-950/80 text-blue-400 text-xs px-3 py-1 rounded-xl border border-blue-800 font-bold" id="dash-date">เมื่อวาน: --/--/----</div>
             </div>
-            <div id="statusDot" class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full border border-amber-500/30">⏳ เชื่อมต่อชีท...</div>
+
+            <div class="glass-card rounded-2xl p-4 flex justify-between items-center text-center shadow-lg">
+                <div class="w-1/3">
+                    <div class="text-[10px] text-slate-400 mb-0.5">ทำงานจริงรวม</div>
+                    <div id="sum-hours" class="text-lg font-bold text-yellow-500">0 <span class="text-xs font-normal text-slate-400">ชม.</span></div>
+                </div>
+                <div class="w-px h-8 bg-slate-800"></div>
+                <div class="w-1/3">
+                    <div class="text-[10px] text-slate-400 mb-0.5">ผลิตได้รวม</div>
+                    <div id="sum-shots" class="text-lg font-bold text-blue-400">0 <span class="text-xs font-normal text-slate-400">Shot</span></div>
+                </div>
+                <div class="w-px h-8 bg-slate-800"></div>
+                <div class="w-1/3">
+                    <div class="text-[10px] text-slate-400 mb-0.5">ประสิทธิภาพเฉลี่ย</div>
+                    <div id="sum-perf" class="text-lg font-bold text-green-400">0%</div>
+                </div>
+            </div>
+
+            <div id="bubble-container" class="space-y-3">
+                <div class="text-center text-slate-500 text-sm py-12">กำลังดึงข้อมูลเครื่องจักร...</div>
+            </div>
         </div>
 
-        <form id="recordForm" class="space-y-4">
-            
-            <!-- การ์ด 1: ข้อมูลตั้งต้น -->
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-300/80 space-y-3">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. เลือกเครื่องและวันที่</div>
+
+        <div id="page-record" class="hidden space-y-4">
+            <h2 class="font-bold text-base text-white pl-1">📝 กรอกข้อมูลประจำกะ</h2>
+            <form id="recordForm" class="space-y-4">
                 
-                <div>
-                    <label class="block text-sm font-semibold mb-1">วันที่ทำงาน</label>
-                    <input type="date" id="date" required class="w-full text-base border-slate-300 rounded-xl p-3 bg-slate-50 border">
+                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
+                    <div>
+                        <label class="block text-xs font-bold mb-1 text-blue-400">วันที่ทำงาน</label>
+                        <input type="date" id="date" required class="w-full text-base rounded-xl p-3 bg-slate-900 border border-slate-700 text-white focus:border-yellow-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1 text-blue-400">ชื่อเครื่องจักร (Machine Name)</label>
+                        <select id="machine_id" required class="w-full text-base font-bold rounded-xl p-3 bg-slate-900 border border-slate-700 text-yellow-500 focus:border-yellow-500 outline-none">
+                            <option value="">กำลังโหลดรายชื่อเครื่อง...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1 text-blue-400">ทำได้กี่รายการ (จำนวนพาร์ท)</label>
+                        <input type="number" id="total_items" value="1" required class="w-full text-base rounded-xl p-3 bg-slate-900 border border-slate-700 text-white outline-none">
+                    </div>
                 </div>
 
+                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
+                    <div class="text-xs font-bold text-blue-400 mb-1">📊 ข้อมูลปริมาณงาน</div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">ยอดรวม (Shot)</label>
+                            <input type="number" id="total_shots" required class="w-full text-lg font-bold text-yellow-500 rounded-xl p-3 bg-slate-950 border border-slate-800 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">ยอดรวม (ชิ้น)</label>
+                            <input type="number" id="total_pieces" required class="w-full text-lg font-bold text-blue-400 rounded-xl p-3 bg-slate-950 border border-slate-800 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md border-red-900/40">
+                    <div class="text-xs font-bold text-red-400 mb-1">⏳ เวลาการผลิต (นาที)</div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">เวลารวมเปิดเครื่องทั้งหมดในกะ</label>
+                        <input type="number" id="total_time" required class="w-full text-base rounded-xl p-3 bg-slate-950 border border-slate-800 text-white outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-green-400 mb-1">เวลาทำงานจริง</label>
+                            <input type="number" id="actual_work_time" required class="w-full text-base font-bold text-green-400 rounded-xl p-3 bg-slate-950 border border-slate-800 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-red-400 mb-1">เวลาสูญเสีย (บิวกดพิมพ์เอง)</label>
+                            <input type="number" id="lost_time" required class="w-full text-base font-bold text-red-500 rounded-xl p-3 bg-red-950/40 border border-red-900/60 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
+                    <div class="text-xs font-bold text-slate-400 mb-1">⚠️ บันทึกปัญหาที่พบหน้างาน</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="col-span-1">
+                            <input type="text" id="issue_no" placeholder="เบอร์ปัญหา" class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white outline-none">
+                        </div>
+                        <div class="col-span-2">
+                            <input type="text" id="issue_detail" placeholder="ปัญหาคืออะไร..." class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white outline-none">
+                        </div>
+                    </div>
+                    <textarea id="note" rows="2" class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white outline-none" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 active:bg-blue-800 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-blue-600/20 text-base transition-colors">
+                    💾 บันทึกข้อมูลเข้าระบบ
+                </button>
+            </form>
+        </div>
+
+
+        <div id="page-export" class="hidden space-y-4">
+            <h2 class="font-bold text-base text-white pl-1">📤 จัดการข้อมูลและการส่งออก</h2>
+            
+            <div class="glass-card rounded-2xl p-4 space-y-4 shadow-md">
                 <div>
-                    <label class="block text-sm font-semibold mb-1">รหัสเครื่องจักร <span class="text-xs font-normal text-slate-400">(ดึงจาก Google Sheet)</span></label>
-                    <select id="machine_id" required class="w-full text-base font-bold text-blue-600 border-slate-300 rounded-xl p-3 bg-slate-50 border">
-                        <option value="">กำลังโหลดรายชื่อเครื่อง...</option>
+                    <label class="block text-xs font-bold text-blue-400 mb-2">เลือกช่วงเวลาข้อมูลที่ต้องการกรอง</label>
+                    <select id="export-period" onchange="previewExport()" class="w-full text-base rounded-xl p-3 bg-slate-900 border border-slate-700 text-yellow-500 font-bold outline-none">
+                        <option value="yesterday">ข้อมูลเมื่อวาน</option>
+                        <option value="today">ข้อมูลวันนี้</option>
+                        <option value="week">ข้อมูลสัปดาห์นี้</option>
+                        <option value="month">ข้อมูลเดือนนี้</option>
+                        <option value="all">ข้อมูลทั้งหมดที่บันทึกไว้</option>
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold mb-1">ทำได้กี่รายการ (จำนวนพาร์ทเนม)</label>
-                    <input type="number" id="total_items" value="1" required class="w-full text-base border-slate-300 rounded-xl p-3 bg-slate-50 border">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 mb-1">จำนวนชุดข้อมูลในระบบที่ตรวจพบ</div>
+                    <div class="text-2xl font-bold text-white"><span id="export-count" class="text-blue-500">0</span> ชุดข้อมูล</div>
                 </div>
-            </div>
 
-            <!-- การ์ด 2: ผลผลิต -->
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-300/80 space-y-3">
-                <div class="text-xs font-bold text-blue-500 uppercase tracking-wider">2. สถิติผลผลิต</div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">ยอดรวม (Shot)</label>
-                        <input type="number" id="total_shots" placeholder="0" required class="w-full text-lg font-bold text-blue-600 border rounded-xl p-3 bg-blue-50/40 border-blue-200">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">ยอดรวม (ชิ้น)</label>
-                        <input type="number" id="total_pieces" placeholder="0" required class="w-full text-lg font-bold text-blue-600 border rounded-xl p-3 bg-blue-50/40 border-blue-200">
-                    </div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="exportExcel()" class="bg-yellow-600 active:bg-yellow-700 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm">
+                        <span>📊</span> โหลด Excel
+                    </button>
+                    <button onclick="copyForLINE()" class="bg-blue-600 active:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm">
+                        <span>📋</span> ก๊อปส่ง LINE
+                    </button>
                 </div>
-            </div>
-
-            <!-- การ์ด 3: เวลาทำงาน (เพิ่มเวลาสูญเสียแล้ว!) -->
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-300/80 space-y-3">
-                <div class="text-xs font-bold text-amber-600 uppercase tracking-wider">3. บันทึกเวลา (นาที)</div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">เวลารวมเปิดเครื่องในกะ</label>
-                    <input type="number" id="total_time" placeholder="เช่น 480" required class="w-full text-base border rounded-xl p-3 bg-amber-50/30 border-amber-200">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">เวลาทำงานจริง</label>
-                        <input type="number" id="actual_work_time" placeholder="เช่น 410" required class="w-full text-base font-bold text-green-700 border rounded-xl p-3 bg-green-50 border-green-300">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-red-600 mb-1">เวลาสูญเสีย (Lost)</label>
-                        <input type="number" id="lost_time" placeholder="เช่น 70" required class="w-full text-base font-bold text-red-600 border rounded-xl p-3 bg-red-50 border-red-300">
-                    </div>
-                </div>
-            </div>
-
-            <!-- พื้นที่สำหรับ Capture เป็นรูปภาพ -->
-            <div id="captureArea" class="bg-slate-900 text-white p-4 rounded-2xl shadow-md space-y-2 border border-slate-800">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <span class="text-xs font-bold text-slate-400">📊 พรีวิวผลลัพธ์ประจำวัน</span>
-                    <span id="cardMachName" class="text-xs text-blue-400 font-bold">-</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-center pt-1">
-                    <div class="bg-slate-800/80 p-2.5 rounded-xl">
-                        <div class="text-[10px] text-slate-400">ความเร็วจริง</div>
-                        <div id="prev_rate" class="text-lg font-bold text-white">0</div>
-                        <div class="text-[9px] text-slate-400">Shot/Hr</div>
-                    </div>
-                    <div class="bg-slate-800/80 p-2.5 rounded-xl">
-                        <div class="text-[10px] text-slate-400">เทียบเป้า</div>
-                        <div id="prev_diff" class="text-lg font-bold text-slate-300">0</div>
-                        <div class="text-[9px] text-slate-400">Shot</div>
-                    </div>
-                    <div class="bg-slate-800/80 p-2.5 rounded-xl">
-                        <div class="text-[10px] text-slate-400">ประสิทธิภาพ</div>
-                        <div id="prev_perf" class="text-lg font-bold text-blue-400">0%</div>
-                        <div class="text-[9px] text-slate-400">Efficiency</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- การ์ด 4: หมายเหตุ -->
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-300/80 space-y-3">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">4. ปัญหาที่พบ</div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="col-span-1">
-                        <input type="text" id="issue_no" placeholder="เบอร์ปัญหา" class="w-full text-sm border rounded-xl p-3 bg-slate-50">
-                    </div>
-                    <div class="col-span-2">
-                        <input type="text" id="issue_detail" placeholder="รายละเอียดปัญหา (ถ้ามี)" class="w-full text-sm border rounded-xl p-3 bg-slate-50">
-                    </div>
-                </div>
-                <textarea id="note" rows="2" class="w-full text-sm border rounded-xl p-3 bg-slate-50" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
-            </div>
-
-            <!-- ปุ่มหลัก -->
-            <button type="submit" id="submitBtn" class="w-full bg-blue-600 active:bg-blue-800 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-blue-500/30 text-base">
-                💾 บันทึกข้อมูลลง Google Sheets
-            </button>
-
-        </form>
-
-        <!-- โซนปุ่มส่งออก (Export Options) -->
-        <div class="pt-2">
-            <div class="text-center text-xs font-semibold text-slate-500 mb-2.5">--- ตัวเลือกส่งออกรายงานด่วน ---</div>
-            <div class="grid grid-cols-3 gap-2">
-                <button onclick="copyForLINE()" type="button" class="bg-white border border-slate-300 text-slate-700 py-3 px-2 rounded-xl text-xs font-bold shadow-sm flex flex-col items-center gap-1">
-                    <span>📋</span> ก๊อปส่ง LINE
-                </button>
-                <button onclick="saveAsImage()" type="button" class="bg-white border border-slate-300 text-slate-700 py-3 px-2 rounded-xl text-xs font-bold shadow-sm flex flex-col items-center gap-1">
-                    <span>📸</span> เซฟรูปภาพ
-                </button>
-                <button onclick="exportExcel()" type="button" class="bg-white border border-slate-300 text-slate-700 py-3 px-2 rounded-xl text-xs font-bold shadow-sm flex flex-col items-center gap-1">
-                    <span>📊</span> โหลด Excel
-                </button>
             </div>
         </div>
 
@@ -148,127 +175,144 @@
 
     <script>
         // =====================================================================
-        // 🚨 บิว! เอาลิงก์ WEB APP ยาวๆ มาแปะทับข้อความข้างล่างนี้เท่านั้นครับ! 🚨
+        // 🚨 บิว วางลิงก์ WEB APP ยาวๆ จากการ DEPLOY แทนค่าในเครื่องหมายคำพูดนี้ได้เลยครับ 🚨
         // =====================================================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz63-pAOx6PTo-64sH4Mqop9PBEdql5ECWICqIe-QYmeA8qfvv8KX5NcPF47yVmICmMRg/exec";
 
-        document.getElementById('date').valueAsDate = new Date();
+        let globalData = { machines: [], records: [] };
 
-        // ดึงรายชื่อเครื่องจากชีทอัตโนมัติเมื่อเปิดแอป
+        function switchTab(tabId) {
+            ['dashboard', 'record', 'export'].forEach(id => {
+                document.getElementById(`page-${id}`).classList.add('hidden');
+                document.getElementById(`tab-${id}`).classList.remove('active');
+            });
+            document.getElementById(`page-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'export') previewExport();
+        }
+
         window.onload = function() {
-            if(SCRIPT_URL.includes("ใส่_URL")) return;
+            document.getElementById('date').valueAsDate = new Date();
+            if(!SCRIPT_URL.includes("ใส่_URL")) {
+                fetchData();
+            }
+        };
+
+        function fetchData() {
+            document.getElementById('statusDot').innerText = "⏳ กำลังดึงข้อมูล...";
+            document.getElementById('statusDot').className = "text-xs text-yellow-500";
             
             fetch(SCRIPT_URL)
             .then(res => res.json())
-            .then(machines => {
-                const select = document.getElementById('machine_id');
-                select.innerHTML = '<option value="">-- กรุณาเลือกเครื่อง --</option>';
-                machines.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m.id;
-                    opt.dataset.target = m.target;
-                    opt.innerText = `${m.id} (${m.name}) - เป้า ${m.target}`;
-                    select.appendChild(opt);
-                });
-                document.getElementById('statusDot').innerText = "🟢 ออนไลน์";
-                document.getElementById('statusDot').className = "text-xs bg-green-500/20 text-green-700 font-bold px-2 py-1 rounded-full border border-green-500/30";
+            .then(data => {
+                if(data.status === "success") {
+                    globalData = data;
+                    
+                    const select = document.getElementById('machine_id');
+                    select.innerHTML = '<option value="">-- กรุณาเลือกเครื่องจักร --</option>';
+                    globalData.machines.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.dataset.target = m.target;
+                        // V3: เปลี่ยนมาแสดง Machine Name นำหน้าเพื่อความชัดเจนหน้างาน
+                        opt.innerText = `${m.name} [${m.id}] - (${m.operator})`;
+                        select.appendChild(opt);
+                    });
+
+                    document.getElementById('statusDot').innerText = "🟢 ออนไลน์";
+                    document.getElementById('statusDot').className = "text-xs text-green-400";
+                    renderDashboard();
+                }
             })
             .catch(err => {
-                document.getElementById('statusDot').innerText = "🔴 ออฟไลน์ (ใช้ค่าสำรอง)";
-                const select = document.getElementById('machine_id');
-                select.innerHTML = '<option value="M01" data-target="40">M01 (สำรอง-เป้า40)</option><option value="M02" data-target="50">M02 (สำรอง-เป้า50)</option>';
+                document.getElementById('statusDot').innerText = "🔴 สัญญาณฐานข้อมูลขัดข้อง";
+                document.getElementById('statusDot').className = "text-xs text-red-500";
             });
-        };
+        }
 
-        // คำนวณเวลาสูญเสียให้อัตโนมัติ (แต่บิวคลิกแก้เองได้ตลอด)
-        document.getElementById('actual_work_time').addEventListener('input', function() {
-            const tot = parseFloat(document.getElementById('total_time').value) || 0;
-            const act = parseFloat(this.value) || 0;
-            if(tot >= act && act > 0) document.getElementById('lost_time').value = tot - act;
-            calc();
-        });
+        function getYesterdayString() {
+            const y = new Date();
+            y.setDate(y.getDate() - 1);
+            return y.getFullYear() + "-" + String(y.getMonth()+1).padStart(2,'0') + "-" + String(y.getDate()).padStart(2,'0');
+        }
 
-        const calcInputs = ['total_shots', 'actual_work_time', 'machine_id'];
-        calcInputs.forEach(id => document.getElementById(id).addEventListener('input', calc));
+        function getTodayString() {
+            const y = new Date();
+            return y.getFullYear() + "-" + String(y.getMonth()+1).padStart(2,'0') + "-" + String(y.getDate()).padStart(2,'0');
+        }
 
-        function calc() {
-            const shots = parseFloat(document.getElementById('total_shots').value) || 0;
-            const work = parseFloat(document.getElementById('actual_work_time').value) || 0;
-            const sel = document.getElementById('machine_id');
-            const target = parseFloat(sel.options[sel.selectedIndex]?.dataset.target) || 0;
+        function renderDashboard() {
+            const yesterday = getYesterdayString();
+            document.getElementById('dash-date').innerText = "เมื่อวาน: " + yesterday.split('-').reverse().join('/');
+            
+            const yRecords = globalData.records.filter(r => r.date === yesterday);
+            const container = document.getElementById('bubble-container');
+            container.innerHTML = "";
 
-            document.getElementById('cardMachName').innerText = sel.value || "-";
-
-            if(work > 0 && target > 0) {
-                const rate = (shots * 60) / work;
-                const diff = rate - target;
-                const perf = (rate / target) * 100;
-
-                document.getElementById('prev_rate').innerText = rate.toFixed(1);
-                const dfEl = document.getElementById('prev_diff');
-                dfEl.innerText = (diff > 0 ? "+" : "") + diff.toFixed(1);
-                dfEl.className = `text-lg font-bold ${diff >= 0 ? 'text-green-400' : 'text-red-400'}`;
-                document.getElementById('prev_perf').innerText = perf.toFixed(0) + "%";
+            if(yRecords.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-500 py-12 bg-slate-950 rounded-2xl border border-slate-900 text-sm">ไม่มีข้อมูลประวัติการทำงานของเมื่อวานในระบบ</div>`;
+                document.getElementById('sum-hours').innerHTML = `0 <span class="text-xs font-normal text-slate-500">ชม.</span>`;
+                document.getElementById('sum-shots').innerHTML = `0 <span class="text-xs font-normal text-slate-500">Shot</span>`;
+                document.getElementById('sum-perf').innerText = `0%`;
+                return;
             }
-        }
 
-        // 1. ฟังก์ชันก๊อปส่ง LINE
-        function copyForLINE() {
-            const m = document.getElementById('machine_id').value || "ไม่ระบุ";
-            const shots = document.getElementById('total_shots').value || 0;
-            const pieces = document.getElementById('total_pieces').value || 0;
-            const work = document.getElementById('actual_work_time').value || 0;
-            const lost = document.getElementById('lost_time').value || 0;
-            const perf = document.getElementById('prev_perf').innerText;
-            const issue = document.getElementById('issue_detail').value || "ปกติ";
+            let totalMins = 0, totalShots = 0, totalPerf = 0;
 
-            const text = `📊 รายงานผลิตเครื่อง ${m} (${document.getElementById('date').value})
-------------------------
-• ผลิตได้: ${shots} Shot (${pieces} ชิ้น)
-• เวลาเดินเครื่องจริง: ${work} นาที
-• เวลาสูญเสีย: ${lost} นาที
-• ประสิทธิภาพ: ${perf}
-• ปัญหา: ${issue}`;
+            yRecords.forEach(rec => {
+                const mInfo = globalData.machines.find(m => m.id === rec.machine_id) || { name: "เครื่องภายนอก", operator: "ไม่ระบุ" };
+                
+                totalMins += Number(rec.work_mins);
+                totalShots += Number(rec.shots);
+                
+                let perfNum = parseFloat(rec.perf);
+                if(isNaN(perfNum)) perfNum = 0;
+                if(perfNum <= 1 && perfNum > 0) perfNum = perfNum * 100;
+                totalPerf += perfNum;
 
-            navigator.clipboard.writeText(text).then(() => alert("📋 ก๊อปปี้ข้อความเรียบร้อย! ไปกด Paste ลงกลุ่ม LINE ได้เลย"));
-        }
-
-        // 2. ฟังก์ชันเซฟรูปภาพ
-        function saveAsImage() {
-            html2canvas(document.getElementById('captureArea')).then(canvas => {
-                const a = document.createElement('a');
-                a.download = `KPI_${document.getElementById('machine_id').value || 'Mach'}.png`;
-                a.href = canvas.toDataURL();
-                a.click();
+                const card = document.createElement('div');
+                card.className = "glass-card p-4 rounded-2xl flex flex-col gap-2 shadow-md border-l-4 border-l-blue-500";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-slate-800 pb-2">
+                        <div>
+                            <div class="font-bold text-blue-400 text-base">${mInfo.name}</div>
+                            <div class="text-xs text-slate-400">ผู้รับผิดชอบ: ${mInfo.operator} <span class="text-[10px] text-slate-500">(${rec.machine_id})</span></div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[9px] text-slate-400">ประสิทธิภาพ</div>
+                            <div class="font-bold ${perfNum >= 85 ? 'text-green-400' : 'text-red-500'} text-base">${perfNum.toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                        <div><span class="text-slate-400">เวลาทำงานจริง:</span> <span class="text-yellow-500 font-bold">${rec.work_mins} นาที</span></div>
+                        <div><span class="text-slate-400">ผลผลิตสะสม:</span> <span class="text-white font-bold">${rec.shots.toLocaleString()} Shot</span></div>
+                        <div><span class="text-slate-400">จำนวนชิ้นงาน:</span> <span class="text-white">${rec.pieces.toLocaleString()} ชิ้น</span></div>
+                        <div><span class="text-slate-400">วิ่งงานรวม:</span> <span class="text-white">${rec.items} รายการ</span></div>
+                    </div>
+                    ${rec.lost_mins > 0 ? `
+                        <div class="text-[11px] text-red-400 bg-red-950/30 p-2.5 rounded-xl border border-red-900/30 mt-1">
+                            <strong>⚠️ เวลาสูญเสีย:</strong> ${rec.lost_mins} นาที <br>
+                            <strong>ปัญหา [${rec.issue_no}]:</strong> ${rec.issue}
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(card);
             });
+
+            document.getElementById('sum-hours').innerHTML = `${(totalMins/60).toFixed(1)} <span class="text-xs font-normal text-slate-500">ชม.</span>`;
+            document.getElementById('sum-shots').innerHTML = `${totalShots.toLocaleString()} <span class="text-xs font-normal text-slate-500">Shot</span>`;
+            document.getElementById('sum-perf').innerText = `${(totalPerf / yRecords.length).toFixed(0)}%`;
         }
 
-        // 3. ฟังก์ชันโหลด Excel
-        function exportExcel() {
-            const data = [{
-                "วันที่": document.getElementById('date').value,
-                "เครื่อง": document.getElementById('machine_id').value,
-                "Shot": document.getElementById('total_shots').value,
-                "ชิ้นงาน": document.getElementById('total_pieces').value,
-                "ทำงานจริง(นาที)": document.getElementById('actual_work_time').value,
-                "สูญเสีย(นาที)": document.getElementById('lost_time').value,
-                "ความเร็ว": document.getElementById('prev_rate').innerText,
-                "ประสิทธิภาพ": document.getElementById('prev_perf').innerText,
-                "ปัญหา": document.getElementById('issue_detail').value
-            }];
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Report");
-            XLSX.writeFile(wb, `Report_${document.getElementById('machine_id').value || 'Machine'}.xlsx`);
-        }
-
-        // บันทึกลงชีท
+        // ส่งบันทึกข้อมูลประจำกะ
         document.getElementById('recordForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if(SCRIPT_URL.includes("ใส่_URL")) { alert("🚨 บิวยังไม่ได้ใส่ URL ของ Apps Script ในโค้ดครับ!"); return; }
+            if(SCRIPT_URL.includes("ใส่_URL")) { alert("กรุณาติดตั้งลิงก์ Web App ในโค้ดก่อนทำการบันทึกข้อมูล"); return; }
 
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "⏳ กำลังส่งข้อมูลเข้า Google Sheets...";
+            btn.disabled = true; btn.innerText = "⏳ ระบบกำลังส่งค่าไปที่ Google Sheets...";
 
             const payload = {
                 date: document.getElementById('date').value,
@@ -280,20 +324,101 @@
                 actual_work_time: document.getElementById('actual_work_time').value,
                 lost_time: document.getElementById('lost_time').value,
                 issue_no: document.getElementById('issue_no').value,
-                issue_detail: document.getElementById('issue_detail').value,
-                note: document.getElementById('note').value
+                issue_detail: document.getElementById('issue_detail').value
             };
 
             fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(r => r.json()).then(d => {
-                alert("✅ บันทึกลง Google Sheets สำเร็จ!");
-                document.getElementById('recordForm').reset();
-                document.getElementById('date').valueAsDate = new Date();
-                calc();
-            }).catch(e => alert("❌ ติดปัญหาในการส่งข้อมูล")).finally(() => {
-                btn.disabled = false; btn.innerText = "💾 บันทึกข้อมูลลง Google Sheets";
+                if(d.status === "success"){
+                    alert("✅ บันทึกข้อมูลเข้าตารางเรียบร้อยแล้ว!");
+                    document.getElementById('recordForm').reset();
+                    document.getElementById('date').valueAsDate = new Date();
+                    fetchData();
+                    switchTab('dashboard');
+                } else {
+                    alert("❌ เกิดข้อผิดพลาดของสคริปต์: " + d.msg);
+                }
+            }).catch(e => alert("❌ ไม่สามารถส่งชุดข้อมูลไปยังคลาวด์ได้"))
+            .finally(() => {
+                btn.disabled = false; btn.innerText = "💾 บันทึกการทำงาน";
             });
         });
+
+        function getFilteredRecords() {
+            const period = document.getElementById('export-period').value;
+            let filtered = [];
+            
+            if(period === 'yesterday') filtered = globalData.records.filter(r => r.date === getYesterdayString());
+            else if(period === 'today') filtered = globalData.records.filter(r => r.date === getTodayString());
+            else if(period === 'all') filtered = globalData.records;
+            else {
+                const t = new Date();
+                const monthStr = t.getFullYear() + "-" + String(t.getMonth()+1).padStart(2,'0');
+                if(period === 'month') {
+                    filtered = globalData.records.filter(r => r.date.startsWith(monthStr));
+                } else {
+                    filtered = globalData.records; 
+                }
+            }
+            return filtered;
+        }
+
+        function previewExport() {
+            const recs = getFilteredRecords();
+            document.getElementById('export-count').innerText = recs.length;
+        }
+
+        function exportExcel() {
+            const recs = getFilteredRecords();
+            if(recs.length === 0) { alert("ไม่มีชุดข้อมูลที่พบในช่วงเวลาดังกล่าว"); return; }
+
+            const exportData = recs.map(r => {
+                const m = globalData.machines.find(m => m.id === r.machine_id) || {};
+                let p = parseFloat(r.perf);
+                if(p <= 1 && p > 0) p = (p*100).toFixed(1)+'%';
+                else if(!isNaN(p)) p = p.toFixed(1)+'%';
+                return {
+                    "วันที่ทำงาน": r.date,
+                    "ชื่อเครื่องจักร": m.name || r.machine_id,
+                    "พนักงานผู้รับผิดชอบ": m.operator || "-",
+                    "จำนวนรายการ (พาร์ท)": r.items,
+                    "ยอดรวม (Shot)": r.shots,
+                    "ยอดรวม (ชิ้น)": r.pieces,
+                    "เวลารวมเปิดเครื่อง (นาที)": r.total_time,
+                    "เวลาทำงานจริง (นาที)": r.work_mins,
+                    "เวลาสูญเสีย (นาที)": r.lost_mins,
+                    "ประสิทธิภาพการคำนวณ": p,
+                    "โค้ดปัญหา": r.issue_no,
+                    "รายละเอียดปัญหา": r.issue
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "รายงานบันทึกการทำงาน");
+            XLSX.writeFile(wb, `รายงานการผลิต_${document.getElementById('export-period').value}.xlsx`);
+        }
+
+        function copyForLINE() {
+            const recs = getFilteredRecords();
+            if(recs.length === 0) { alert("ไม่พบข้อมูลที่จะทำการคัดลอก"); return; }
+            
+            let text = `📊 สรุปรายงานบันทึกการทำงาน (${document.getElementById('export-period').options[document.getElementById('export-period').selectedIndex].text})\n\n`;
+            
+            recs.forEach(r => {
+                const m = globalData.machines.find(m => m.id === r.machine_id) || {};
+                let p = parseFloat(r.perf);
+                if(p <= 1 && p > 0) p = (p*100).toFixed(0);
+                else if(!isNaN(p)) p = p.toFixed(0);
+                text += `🏭 เครื่อง: ${m.name || r.machine_id} (พนักงาน: ${m.operator || 'ไม่ระบุ'})\n`;
+                text += ` • ปริมาณ: ${r.shots} Shot | ทำงานจริง: ${r.work_mins} นาที\n`;
+                text += ` • ประสิทธิภาพกะ: ${p}%\n`;
+                if(r.lost_mins > 0) text += ` • ⚠️ สูญเสียเวลา: ${r.lost_mins} นาที [ปัญหา: ${r.issue}]\n`;
+                text += `-----------------\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => alert("📋 คัดลอกข้อความสรุปเรียบร้อย! สามารถเปิดแอป LINE แล้วกดวางลงกลุ่มได้ทันที"));
+        }
     </script>
 </body>
 </html>
