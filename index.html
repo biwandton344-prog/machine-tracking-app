@@ -175,7 +175,7 @@
 
     <script>
         // =====================================================================
-        // 🚨 บิว วางลิงก์ WEB APP ยาวๆ จากการ DEPLOY แทนค่าในเครื่องหมายคำพูดนี้ได้เลยครับ 🚨
+        // 🚨 นำ URL ของ Apps Script มาวางแทนข้อความในบรรทัดด้านล่างนี้ 🚨
         // =====================================================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyv5DLe2CSITx9sgp32gfkdpNOgyu_2l_uVmHSS9VFSnEDkfIT_srFVJ1R1yDgXaIl2/exec";
 
@@ -216,7 +216,6 @@
                         const opt = document.createElement('option');
                         opt.value = m.id;
                         opt.dataset.target = m.target;
-                        // V3: เปลี่ยนมาแสดง Machine Name นำหน้าเพื่อความชัดเจนหน้างาน
                         opt.innerText = `${m.name} [${m.id}] - (${m.operator})`;
                         select.appendChild(opt);
                     });
@@ -262,7 +261,7 @@
             let totalMins = 0, totalShots = 0, totalPerf = 0;
 
             yRecords.forEach(rec => {
-                const mInfo = globalData.machines.find(m => m.id === rec.machine_id) || { name: "เครื่องภายนอก", operator: "ไม่ระบุ" };
+                const mInfo = globalData.machines.find(m => m.id === rec.machine_id) || { name: "เครื่องภายนอก", operator: "ไม่ระบุ", target: 0 };
                 
                 totalMins += Number(rec.work_mins);
                 totalShots += Number(rec.shots);
@@ -271,6 +270,32 @@
                 if(isNaN(perfNum)) perfNum = 0;
                 if(perfNum <= 1 && perfNum > 0) perfNum = perfNum * 100;
                 totalPerf += perfNum;
+
+                // ==========================================
+                // ตรรกะใหม่: คำนวณ Shot/Hr และเปรียบเทียบเป้า
+                // ==========================================
+                let actualRate = 0;
+                if (rec.work_mins > 0) {
+                    actualRate = (rec.shots * 60) / rec.work_mins;
+                }
+                
+                let targetRate = Number(mInfo.target) || 0;
+                let diffRate = actualRate - targetRate;
+                
+                let diffColor = "text-yellow-500";
+                let diffIcon = "⚡";
+                let diffText = "ตามเป้า";
+                
+                if (diffRate > 0) {
+                    diffColor = "text-green-400";
+                    diffIcon = "📈";
+                    diffText = `เร็วกว่าเป้า +${diffRate.toFixed(1)}`;
+                } else if (diffRate < 0) {
+                    diffColor = "text-red-400";
+                    diffIcon = "📉";
+                    diffText = `ช้ากว่าเป้า ${Math.abs(diffRate).toFixed(1)}`;
+                }
+                // ==========================================
 
                 const card = document.createElement('div');
                 card.className = "glass-card p-4 rounded-2xl flex flex-col gap-2 shadow-md border-l-4 border-l-blue-500";
@@ -281,8 +306,9 @@
                             <div class="text-xs text-slate-400">ผู้รับผิดชอบ: ${mInfo.operator} <span class="text-[10px] text-slate-500">(${rec.machine_id})</span></div>
                         </div>
                         <div class="text-right">
-                            <div class="text-[9px] text-slate-400">ประสิทธิภาพ</div>
-                            <div class="font-bold ${perfNum >= 85 ? 'text-green-400' : 'text-red-500'} text-base">${perfNum.toFixed(1)}%</div>
+                            <div class="text-[10px] text-slate-400">ได้จริง (เป้า ${targetRate})</div>
+                            <div class="font-bold text-white text-lg leading-tight">${actualRate.toFixed(1)} <span class="text-[10px] text-slate-400 font-normal">S/Hr</span></div>
+                            <div class="text-[11px] font-bold ${diffColor} mt-0.5">${diffIcon} ${diffText}</div>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-xs pt-1">
@@ -377,6 +403,9 @@
                 let p = parseFloat(r.perf);
                 if(p <= 1 && p > 0) p = (p*100).toFixed(1)+'%';
                 else if(!isNaN(p)) p = p.toFixed(1)+'%';
+                
+                let actualRate = r.work_mins > 0 ? (r.shots * 60) / r.work_mins : 0;
+
                 return {
                     "วันที่ทำงาน": r.date,
                     "ชื่อเครื่องจักร": m.name || r.machine_id,
@@ -387,6 +416,7 @@
                     "เวลารวมเปิดเครื่อง (นาที)": r.total_time,
                     "เวลาทำงานจริง (นาที)": r.work_mins,
                     "เวลาสูญเสีย (นาที)": r.lost_mins,
+                    "ความเร็วจริง (Shot/Hr)": actualRate.toFixed(1),
                     "ประสิทธิภาพการคำนวณ": p,
                     "โค้ดปัญหา": r.issue_no,
                     "รายละเอียดปัญหา": r.issue
@@ -407,12 +437,11 @@
             
             recs.forEach(r => {
                 const m = globalData.machines.find(m => m.id === r.machine_id) || {};
-                let p = parseFloat(r.perf);
-                if(p <= 1 && p > 0) p = (p*100).toFixed(0);
-                else if(!isNaN(p)) p = p.toFixed(0);
+                let actualRate = r.work_mins > 0 ? (r.shots * 60) / r.work_mins : 0;
+                
                 text += `🏭 เครื่อง: ${m.name || r.machine_id} (พนักงาน: ${m.operator || 'ไม่ระบุ'})\n`;
                 text += ` • ปริมาณ: ${r.shots} Shot | ทำงานจริง: ${r.work_mins} นาที\n`;
-                text += ` • ประสิทธิภาพกะ: ${p}%\n`;
+                text += ` • ความเร็วเฉลี่ย: ${actualRate.toFixed(1)} Shot/ชม.\n`;
                 if(r.lost_mins > 0) text += ` • ⚠️ สูญเสียเวลา: ${r.lost_mins} นาที [ปัญหา: ${r.issue}]\n`;
                 text += `-----------------\n`;
             });
