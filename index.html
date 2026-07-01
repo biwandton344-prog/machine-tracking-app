@@ -72,65 +72,62 @@
             <form id="recordForm" class="space-y-4">
                 
                 <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
-                    <div>
-                        <label class="block text-xs font-bold mb-1 text-blue-400">วันที่ทำงาน</label>
-                        <input type="date" id="date" required class="w-full text-base rounded-xl p-3 bg-slate-900 border border-slate-700 text-white focus:border-yellow-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold mb-1 text-blue-400">ชื่อเครื่องจักร (Machine Name)</label>
-                        <select id="machine_id" required class="w-full text-base font-bold rounded-xl p-3 bg-slate-900 border border-slate-700 text-yellow-500 focus:border-yellow-500 outline-none">
-                            <option value="">กำลังโหลดรายชื่อเครื่อง...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold mb-1 text-blue-400">ทำได้กี่รายการ (จำนวนพาร์ท)</label>
-                        <input type="number" id="total_items" value="1" required class="w-full text-base rounded-xl p-3 bg-slate-900 border border-slate-700 text-white outline-none">
+                    <div class="flex gap-3">
+                        <div class="w-2/5">
+                            <label class="block text-[11px] font-bold mb-1 text-blue-400">วันที่ทำงาน</label>
+                            <input type="date" id="date" required class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white focus:border-yellow-500 outline-none">
+                        </div>
+                        <div class="w-3/5">
+                            <label class="block text-[11px] font-bold mb-1 text-blue-400">ชื่อเครื่องจักร</label>
+                            <select id="machine_id" required class="w-full text-sm font-bold rounded-xl p-3 bg-slate-900 border border-slate-700 text-yellow-500 focus:border-yellow-500 outline-none">
+                                <option value="">กำลังโหลด...</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
                     <div class="text-xs font-bold text-blue-400 mb-1">📊 ข้อมูลปริมาณงาน</div>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">ยอดรวม (Shot)</label>
-                            <input type="number" id="total_shots" required class="w-full text-lg font-bold text-yellow-500 rounded-xl p-3 bg-slate-950 border border-slate-800 outline-none">
+                            <label class="block text-[10px] text-slate-400 mb-1 text-center">พาร์ท (รายการ)</label>
+                            <input type="number" id="total_items" value="1" required class="w-full text-base font-bold text-white rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
                         </div>
                         <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">ยอดรวม (ชิ้น)</label>
-                            <input type="number" id="total_pieces" required class="w-full text-lg font-bold text-blue-400 rounded-xl p-3 bg-slate-950 border border-slate-800 outline-none">
+                            <label class="block text-[10px] text-slate-400 mb-1 text-center">ยอดรวม (Shot)</label>
+                            <input type="number" id="total_shots" required class="w-full text-base font-bold text-yellow-500 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1 text-center">ยอดรวม (ชิ้น)</label>
+                            <input type="number" id="total_pieces" required class="w-full text-base font-bold text-blue-400 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
                         </div>
                     </div>
                 </div>
 
                 <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md border-red-900/40">
                     <div class="text-xs font-bold text-red-400 mb-1">⏳ เวลาการผลิต (นาที)</div>
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">เวลารวมเปิดเครื่องทั้งหมดในกะ</label>
-                        <input type="number" id="total_time" required class="w-full text-base rounded-xl p-3 bg-slate-950 border border-slate-800 text-white outline-none">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-[11px] text-green-400 mb-1">เวลาทำงานจริง</label>
-                            <input type="number" id="actual_work_time" required class="w-full text-base font-bold text-green-400 rounded-xl p-3 bg-slate-950 border border-slate-800 outline-none">
+                            <label class="block text-[10px] text-slate-400 mb-1 text-center">เวลารวมเปิดเครื่อง</label>
+                            <input type="number" id="total_time" required class="w-full text-base font-bold text-white rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center" placeholder="เช่น 480">
                         </div>
                         <div>
-                            <label class="block text-[11px] text-red-400 mb-1">เวลาสูญเสีย (บิวกดพิมพ์เอง)</label>
-                            <input type="number" id="lost_time" required class="w-full text-base font-bold text-red-500 rounded-xl p-3 bg-red-950/40 border border-red-900/60 outline-none">
+                            <label class="block text-[10px] text-green-400 mb-1 text-center">เวลาทำงานจริง</label>
+                            <input type="number" id="actual_work_time" required class="w-full text-base font-bold text-green-400 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center" placeholder="เช่น 450">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-red-400 mb-1 text-center">เวลาสูญเสีย (ออโต้)</label>
+                            <input type="number" id="lost_time" readonly class="w-full text-base font-bold text-red-500 rounded-xl p-2.5 bg-red-950/40 border border-red-900/60 outline-none text-center cursor-not-allowed" placeholder="0">
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
-                    <div class="text-xs font-bold text-slate-400 mb-1">⚠️ บันทึกปัญหาที่พบหน้างาน</div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="col-span-1">
-                            <input type="text" id="issue_no" placeholder="เบอร์ปัญหา" class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white outline-none">
-                        </div>
-                        <div class="col-span-2">
-                            <input type="text" id="issue_detail" placeholder="ปัญหาคืออะไร..." class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white outline-none">
-                        </div>
+                <div class="glass-card p-3 rounded-2xl shadow-md">
+                    <div class="text-[11px] font-bold text-slate-400 mb-2">⚠️ บันทึกปัญหาหน้างาน (ถ้ามี)</div>
+                    <div class="flex gap-2">
+                        <input type="text" id="issue_no" placeholder="เบอร์" class="w-1/3 text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-white outline-none">
+                        <input type="text" id="issue_detail" placeholder="รายละเอียด..." class="w-2/3 text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-white outline-none">
                     </div>
-                    <textarea id="note" rows="2" class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white outline-none" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
                 </div>
 
                 <button type="submit" id="submitBtn" class="w-full bg-blue-600 active:bg-blue-800 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-blue-600/20 text-base transition-colors">
@@ -216,7 +213,7 @@
                         const opt = document.createElement('option');
                         opt.value = m.id;
                         opt.dataset.target = m.target;
-                        opt.innerText = `${m.name} [${m.id}] - (${m.operator})`;
+                        opt.innerText = `${m.name} [${m.id}]`;
                         select.appendChild(opt);
                     });
 
@@ -230,6 +227,23 @@
                 document.getElementById('statusDot').className = "text-xs text-red-500";
             });
         }
+
+        // --- ระบบคำนวณเวลาสูญเสียอัตโนมัติ ---
+        function calculateLostTime() {
+            const tot = parseFloat(document.getElementById('total_time').value) || 0;
+            const act = parseFloat(document.getElementById('actual_work_time').value) || 0;
+            const lostInput = document.getElementById('lost_time');
+            
+            if (tot > 0 && act > 0) {
+                const lost = tot - act;
+                lostInput.value = lost >= 0 ? lost : 0; // ป้องกันค่าติดลบถ้ากรอกผิด
+            } else {
+                lostInput.value = "";
+            }
+        }
+        document.getElementById('total_time').addEventListener('input', calculateLostTime);
+        document.getElementById('actual_work_time').addEventListener('input', calculateLostTime);
+        // ------------------------------------
 
         function getYesterdayString() {
             const y = new Date();
@@ -271,9 +285,6 @@
                 if(perfNum <= 1 && perfNum > 0) perfNum = perfNum * 100;
                 totalPerf += perfNum;
 
-                // ==========================================
-                // ตรรกะใหม่: คำนวณ Shot/Hr และเปรียบเทียบเป้า
-                // ==========================================
                 let actualRate = 0;
                 if (rec.work_mins > 0) {
                     actualRate = (rec.shots * 60) / rec.work_mins;
@@ -295,7 +306,6 @@
                     diffIcon = "📉";
                     diffText = `ช้ากว่าเป้า ${Math.abs(diffRate).toFixed(1)}`;
                 }
-                // ==========================================
 
                 const card = document.createElement('div');
                 card.className = "glass-card p-4 rounded-2xl flex flex-col gap-2 shadow-md border-l-4 border-l-blue-500";
@@ -350,7 +360,8 @@
                 actual_work_time: document.getElementById('actual_work_time').value,
                 lost_time: document.getElementById('lost_time').value,
                 issue_no: document.getElementById('issue_no').value,
-                issue_detail: document.getElementById('issue_detail').value
+                issue_detail: document.getElementById('issue_detail').value,
+                note: "-" // ยุบกล่องหมายเหตุทิ้งแล้ว ส่งขีดกลางไปแทนเพื่อไม่ให้ชีทเอ๋อ
             };
 
             fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
@@ -366,10 +377,11 @@
                 }
             }).catch(e => alert("❌ ไม่สามารถส่งชุดข้อมูลไปยังคลาวด์ได้"))
             .finally(() => {
-                btn.disabled = false; btn.innerText = "💾 บันทึกการทำงาน";
+                btn.disabled = false; btn.innerText = "💾 บันทึกข้อมูลเข้าระบบ";
             });
         });
 
+        // ============= ส่วนของการ Export =============
         function getFilteredRecords() {
             const period = document.getElementById('export-period').value;
             let filtered = [];
