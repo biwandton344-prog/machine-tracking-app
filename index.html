@@ -6,182 +6,206 @@
     <title>บันทึกการทำงาน</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #000000; color: #f8fafc; }
-        .tab-btn.active { color: #eab308; border-bottom: 2px solid #eab308; }
-        .glass-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.4); }
+        body { font-family: 'Sarabun', sans-serif; }
+        /* ล็อกสีเมนูด้านล่างตอนกดเลือก */
+        .tab-btn.active { color: #eab308; border-top: 3px solid #eab308; background: rgba(30, 41, 59, 0.5); }
+        /* ซ่อนลูกศรขึ้นลงในช่องกรอกตัวเลข */
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="min-h-screen pb-24">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-24 antialiased">
 
-    <!-- เมนูด้านล่าง -->
-    <div class="fixed bottom-0 w-full bg-slate-950 border-t border-slate-800 flex justify-around p-3 z-50 text-slate-400 text-xs font-bold shadow-[0_-10px_25px_rgba(0,0,0,0.8)]">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex flex-col items-center p-2 w-1/3">
-            <span class="text-xl mb-1">📊</span> ภาพรวม
-        </button>
-        <button onclick="switchTab('record')" id="tab-record" class="tab-btn flex flex-col items-center p-2 w-1/3">
-            <span class="text-xl mb-1">📝</span> บันทึก
-        </button>
-        <button onclick="switchTab('export')" id="tab-export" class="tab-btn flex flex-col items-center p-2 w-1/3">
-            <span class="text-xl mb-1">📤</span> ส่งออก
-        </button>
-    </div>
-
-    <!-- ส่วนหัวของแอป -->
-    <div class="bg-slate-950 p-4 flex justify-between items-center border-b border-blue-900 shadow-md sticky top-0 z-40">
-        <div>
-            <h1 class="text-lg font-bold text-blue-500">🏭 บันทึกการทำงาน</h1>
-            <p id="statusDot" class="text-xs text-yellow-500">⏳ กำลังเชื่อมต่อฐานข้อมูล...</p>
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-4 sticky top-0 z-40 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">🏭</span>
+            <div>
+                <h1 class="text-base font-bold text-blue-400 leading-tight">บันทึกการทำงาน</h1>
+                <p id="statusDot" class="text-[11px] font-semibold text-yellow-500 flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span> กำลังเชื่อมต่อชีท...
+                </p>
+            </div>
         </div>
-    </div>
+        <div class="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
+            V3.2 Mobile
+        </div>
+    </header>
 
-    <div class="max-w-md mx-auto p-4 space-y-4">
+    <main class="max-w-md mx-auto p-4 space-y-5">
 
-        <!-- ================= หน้าที่ 1: DASHBOARD (ภาพรวม) ================= -->
         <div id="page-dashboard" class="space-y-4">
-            <div class="flex justify-between items-center">
-                <h2 class="font-bold text-base text-white flex items-center gap-1">
-                    <span class="inline-block w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span> สถิติผลงานประจำวัน
-                </h2>
-                <!-- เปลี่ยนเป็นช่องเลือกวันที่ -->
-                <input type="date" id="dash-date-picker" onchange="renderDashboard()" class="bg-slate-900 text-yellow-500 text-xs px-2 py-1.5 rounded-xl border border-slate-700 outline-none font-bold">
+            
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex justify-between items-center shadow-sm">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <span>📅</span> สถิติประจำวันที่:
+                </span>
+                <input type="date" id="dash-date-picker" onchange="renderDashboard()" class="bg-slate-950 text-yellow-400 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-700 outline-none focus:border-yellow-500">
             </div>
 
-            <!-- กล่องสรุปภาพรวมทั้งหมด -->
-            <div class="glass-card rounded-2xl p-4 flex justify-between items-center text-center shadow-lg">
-                <div class="w-1/3">
-                    <div class="text-[10px] text-slate-400 mb-0.5">ทำงานจริงรวม</div>
-                    <div id="sum-hours" class="text-lg font-bold text-yellow-500">0 <span class="text-xs font-normal text-slate-400">ชม.</span></div>
+            <div class="bg-gradient-to-r from-slate-900 via-blue-950/40 to-slate-900 border border-blue-900/40 rounded-2xl p-4 shadow-lg grid grid-cols-3 gap-2 text-center divide-x divide-slate-800">
+                <div>
+                    <div class="text-[11px] font-medium text-slate-400 mb-1">เวลาทำงานจริง</div>
+                    <div id="sum-hours" class="text-lg font-bold text-yellow-400">0 <span class="text-xs font-normal text-slate-400">ชม.</span></div>
                 </div>
-                <div class="w-px h-8 bg-slate-800"></div>
-                <div class="w-1/3">
-                    <div class="text-[10px] text-slate-400 mb-0.5">ผลิตได้รวม</div>
+                <div class="pl-2">
+                    <div class="text-[11px] font-medium text-slate-400 mb-1">ผลิตได้รวม</div>
                     <div id="sum-shots" class="text-lg font-bold text-blue-400">0 <span class="text-xs font-normal text-slate-400">Shot</span></div>
                 </div>
-                <div class="w-px h-8 bg-slate-800"></div>
-                <div class="w-1/3">
-                    <div class="text-[10px] text-slate-400 mb-0.5">ประสิทธิภาพเฉลี่ย</div>
+                <div class="pl-2">
+                    <div class="text-[11px] font-medium text-slate-400 mb-1">ประสิทธิภาพ</div>
                     <div id="sum-perf" class="text-lg font-bold text-green-400">0%</div>
                 </div>
             </div>
 
-            <div id="bubble-container" class="space-y-3">
-                <div class="text-center text-slate-500 text-sm py-12">กำลังดึงข้อมูลเครื่องจักร...</div>
+            <div id="bubble-container" class="space-y-3.5 pt-1">
+                <div class="text-center text-slate-500 text-sm py-16 bg-slate-900/50 rounded-2xl border border-slate-900">กำลังดึงข้อมูลเครื่องจักร...</div>
             </div>
         </div>
 
 
-        <!-- ================= หน้าที่ 2: RECORD (บันทึกข้อมูล) ================= -->
         <div id="page-record" class="hidden space-y-4">
-            <h2 class="font-bold text-base text-white pl-1">📝 กรอกข้อมูลประจำกะ</h2>
+            
+            <div class="flex items-center gap-2 pl-1">
+                <span class="text-lg">📝</span>
+                <h2 class="font-bold text-base text-white">กรอกข้อมูลประจำกะ</h2>
+            </div>
+
             <form id="recordForm" class="space-y-4">
                 
-                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
-                    <div class="flex gap-3">
-                        <div class="w-2/5">
-                            <label class="block text-[11px] font-bold mb-1 text-blue-400">วันที่ทำงาน</label>
-                            <input type="date" id="date" required class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white focus:border-yellow-500 outline-none">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md space-y-3">
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <div class="col-span-1">
+                            <label class="block text-[11px] font-bold text-blue-400 mb-1">วันที่ทำงาน</label>
+                            <input type="date" id="date" required class="w-full text-xs font-bold rounded-xl p-3 bg-slate-950 border border-slate-700 text-white focus:border-yellow-500 outline-none">
                         </div>
-                        <div class="w-3/5">
-                            <label class="block text-[11px] font-bold mb-1 text-blue-400">ชื่อเครื่องจักร</label>
-                            <select id="machine_id" required class="w-full text-sm font-bold rounded-xl p-3 bg-slate-900 border border-slate-700 text-yellow-500 focus:border-yellow-500 outline-none">
-                                <option value="">กำลังโหลด...</option>
+                        <div class="col-span-2">
+                            <label class="block text-[11px] font-bold text-blue-400 mb-1">ชื่อเครื่องจักร</label>
+                            <select id="machine_id" required class="w-full text-xs font-bold rounded-xl p-3 bg-slate-950 border border-slate-700 text-yellow-400 focus:border-yellow-500 outline-none">
+                                <option value="">กำลังโหลดรายชื่อเครื่อง...</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
-                    <div class="text-xs font-bold text-blue-400 mb-1">📊 ข้อมูลปริมาณงาน</div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md space-y-2.5">
+                    <div class="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                        <span>📊</span> ข้อมูลปริมาณงาน
+                    </div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-[10px] text-slate-400 mb-1 text-center">พาร์ท (รายการ)</label>
-                            <input type="number" id="total_items" value="1" required class="w-full text-base font-bold text-white rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
+                            <label class="block text-[11px] text-slate-400 mb-1 text-center font-medium">พาร์ท (รายการ)</label>
+                            <input type="number" id="total_items" value="1" required class="w-full text-base font-bold text-white rounded-xl p-3 bg-slate-950 border border-slate-700 outline-none text-center focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-[10px] text-slate-400 mb-1 text-center">ยอดรวม (Shot)</label>
-                            <input type="number" id="total_shots" required class="w-full text-base font-bold text-yellow-500 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
+                            <label class="block text-[11px] text-slate-400 mb-1 text-center font-medium">ยอดรวม (Shot)</label>
+                            <input type="number" id="total_shots" placeholder="0" required class="w-full text-base font-bold text-yellow-400 rounded-xl p-3 bg-slate-950 border border-slate-700 outline-none text-center focus:border-yellow-500">
                         </div>
                         <div>
-                            <label class="block text-[10px] text-slate-400 mb-1 text-center">ยอดรวม (ชิ้น)</label>
-                            <input type="number" id="total_pieces" required class="w-full text-base font-bold text-blue-400 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
+                            <label class="block text-[11px] text-slate-400 mb-1 text-center font-medium">ยอดรวม (ชิ้น)</label>
+                            <input type="number" id="total_pieces" placeholder="0" required class="w-full text-base font-bold text-blue-400 rounded-xl p-3 bg-slate-950 border border-slate-700 outline-none text-center focus:border-blue-500">
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md border-red-900/40">
-                    <div class="text-xs font-bold text-red-400 mb-1">⏳ เวลาการผลิต (นาที)</div>
+                <div class="bg-slate-900 border border-red-900/30 rounded-2xl p-4 shadow-md space-y-2.5">
+                    <div class="text-xs font-bold text-red-400 flex items-center gap-1.5">
+                        <span>⏳</span> เวลาการผลิต (นาที)
+                    </div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-[10px] text-slate-400 mb-1 text-center">เวลารวมเปิดเครื่อง</label>
-                            <input type="number" id="total_time" required class="w-full text-base font-bold text-white rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center" placeholder="เช่น 480">
+                            <label class="block text-[11px] text-slate-400 mb-1 text-center font-medium">เวลารวมเปิดเครื่อง</label>
+                            <input type="number" id="total_time" placeholder="480" required class="w-full text-base font-bold text-white rounded-xl p-3 bg-slate-950 border border-slate-700 outline-none text-center focus:border-white">
                         </div>
                         <div>
-                            <label class="block text-[10px] text-green-400 mb-1 text-center">เวลาทำงานจริง</label>
-                            <input type="number" id="actual_work_time" required class="w-full text-base font-bold text-green-400 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center" placeholder="เช่น 450">
+                            <label class="block text-[11px] text-green-400 mb-1 text-center font-medium">เวลาทำงานจริง</label>
+                            <input type="number" id="actual_work_time" placeholder="450" required class="w-full text-base font-bold text-green-400 rounded-xl p-3 bg-slate-950 border border-slate-700 outline-none text-center focus:border-green-500">
                         </div>
                         <div>
-                            <label class="block text-[10px] text-red-400 mb-1 text-center">เวลาสูญเสีย (ออโต้)</label>
-                            <input type="number" id="lost_time" readonly class="w-full text-base font-bold text-red-500 rounded-xl p-2.5 bg-red-950/40 border border-red-900/60 outline-none text-center cursor-not-allowed" placeholder="0">
+                            <label class="block text-[11px] text-red-400 mb-1 text-center font-medium">เวลาสูญเสีย (ออโต้)</label>
+                            <input type="number" id="lost_time" readonly placeholder="0" class="w-full text-base font-bold text-red-500 rounded-xl p-3 bg-red-950/30 border border-red-900/50 outline-none text-center cursor-not-allowed">
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-3 rounded-2xl shadow-md">
-                    <div class="text-[11px] font-bold text-slate-400 mb-2">⚠️ บันทึกปัญหาหน้างาน (ถ้ามี)</div>
-                    <div class="flex gap-2">
-                        <input type="text" id="issue_no" placeholder="เบอร์" class="w-1/3 text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-white outline-none">
-                        <input type="text" id="issue_detail" placeholder="รายละเอียด..." class="w-2/3 text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-white outline-none">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-md space-y-2">
+                    <div class="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                        <span>⚠️</span> บันทึกปัญหาหน้างาน <span class="text-slate-500 font-normal">(ถ้าไม่มีให้เว้นว่างไว้)</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="col-span-1">
+                            <input type="text" id="issue_no" placeholder="เบอร์ปัญหา" class="w-full text-xs font-semibold rounded-xl p-3 bg-slate-950 border border-slate-700 text-white outline-none focus:border-yellow-500">
+                        </div>
+                        <div class="col-span-2">
+                            <input type="text" id="issue_detail" placeholder="รายละเอียดปัญหาคืออะไร..." class="w-full text-xs font-semibold rounded-xl p-3 bg-slate-950 border border-slate-700 text-white outline-none focus:border-yellow-500">
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" id="submitBtn" class="w-full bg-blue-600 active:bg-blue-800 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-blue-600/20 text-base transition-colors">
-                    💾 บันทึกข้อมูลเข้าระบบ
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-blue-600/30 text-base transition duration-150 flex items-center justify-center gap-2">
+                    <span>💾</span> บันทึกข้อมูลเข้าระบบ
                 </button>
             </form>
         </div>
 
 
-        <!-- ================= หน้าที่ 3: EXPORT (จัดการข้อมูล) ================= -->
         <div id="page-export" class="hidden space-y-4">
-            <h2 class="font-bold text-base text-white pl-1">📤 จัดการข้อมูลและการส่งออก</h2>
             
-            <div class="glass-card rounded-2xl p-4 space-y-4 shadow-md">
+            <div class="flex items-center gap-2 pl-1">
+                <span class="text-lg">📤</span>
+                <h2 class="font-bold text-base text-white">จัดการและส่งออกข้อมูล</h2>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md space-y-4">
                 
-                <div class="text-xs font-bold text-blue-400 mb-2">เลือกช่วงวันที่ต้องการดึงข้อมูล</div>
+                <div class="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                    <span>📆</span> เลือกช่วงวันที่ต้องการดึงข้อมูล
+                </div>
+
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] text-slate-400 mb-1">ตั้งแต่วันที่</label>
-                        <input type="date" id="export-start" onchange="previewExport()" class="w-full text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-yellow-500 outline-none">
+                        <label class="block text-[11px] text-slate-400 mb-1 font-medium">ตั้งแต่วันที่</label>
+                        <input type="date" id="export-start" onchange="previewExport()" class="w-full text-xs font-bold rounded-xl p-3 bg-slate-950 border border-slate-700 text-yellow-400 outline-none focus:border-yellow-500">
                     </div>
                     <div>
-                        <label class="block text-[10px] text-slate-400 mb-1">ถึงวันที่</label>
-                        <input type="date" id="export-end" onchange="previewExport()" class="w-full text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-yellow-500 outline-none">
+                        <label class="block text-[11px] text-slate-400 mb-1 font-medium">ถึงวันที่</label>
+                        <input type="date" id="export-end" onchange="previewExport()" class="w-full text-xs font-bold rounded-xl p-3 bg-slate-950 border border-slate-700 text-yellow-400 outline-none focus:border-yellow-500">
                     </div>
                 </div>
 
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
-                    <div class="text-xs text-slate-400 mb-1">จำนวนชุดข้อมูลที่พบในช่วงเวลานี้</div>
-                    <div class="text-2xl font-bold text-white"><span id="export-count" class="text-blue-500">0</span> ชุดข้อมูล</div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center space-y-1">
+                    <div class="text-[11px] text-slate-400">จำนวนชุดข้อมูลที่พบในช่วงเวลานี้</div>
+                    <div class="text-2xl font-bold text-white"><span id="export-count" class="text-blue-400">0</span> <span class="text-sm font-normal text-slate-400">รายการ</span></div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button onclick="exportExcel()" class="bg-yellow-600 active:bg-yellow-700 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm">
-                        <span>📊</span> โหลด Excel
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <button onclick="exportExcel()" type="button" class="bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-bold py-3.5 px-3 rounded-xl shadow-md flex items-center justify-center gap-2 text-xs transition duration-150">
+                        <span>📊</span> โหลดเป็น Excel
                     </button>
-                    <button onclick="copyForLINE()" class="bg-blue-600 active:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm">
-                        <span>📋</span> ก๊อปส่ง LINE
+                    <button onclick="copyForLINE()" type="button" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3.5 px-3 rounded-xl shadow-md flex items-center justify-center gap-2 text-xs transition duration-150">
+                        <span>📋</span> ก๊อปปี้ส่ง LINE
                     </button>
                 </div>
             </div>
         </div>
 
-    </div>
+    </main>
+
+    <nav class="fixed bottom-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-around p-1.5 z-50 text-slate-400 text-xs font-bold shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex flex-col items-center py-2 px-3 w-1/3 rounded-lg transition-all">
+            <span class="text-lg mb-0.5">📊</span> ภาพรวม
+        </button>
+        <button onclick="switchTab('record')" id="tab-record" class="tab-btn flex flex-col items-center py-2 px-3 w-1/3 rounded-lg transition-all">
+            <span class="text-lg mb-0.5">📝</span> บันทึก
+        </button>
+        <button onclick="switchTab('export')" id="tab-export" class="tab-btn flex flex-col items-center py-2 px-3 w-1/3 rounded-lg transition-all">
+            <span class="text-lg mb-0.5">📤</span> ส่งออก
+        </button>
+    </nav>
 
     <script>
         // =====================================================================
-        // 🚨 นำ URL ของ Apps Script มาวางแทนข้อความในบรรทัดด้านล่างนี้ 🚨
+        // 🚨 นำ URL ของ Apps Script ตัวเดิมมาวางแทนคำว่า ใส่_URL_APPS_SCRIPT_ที่นี่ 🚨
         // =====================================================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyv5DLe2CSITx9sgp32gfkdpNOgyu_2l_uVmHSS9VFSnEDkfIT_srFVJ1R1yDgXaIl2/exec";
 
@@ -199,7 +223,6 @@
             if(tabId === 'export') previewExport();
         }
 
-        // ฟังก์ชันช่วยจัดการวันที่ให้อยู่ในฟอร์แมต YYYY-MM-DD
         function toLocalDateString(d) {
             return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
         }
@@ -209,7 +232,6 @@
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
             
-            // ตั้งค่าวันที่เริ่มต้นให้ทุกช่อง
             document.getElementById('date').value = toLocalDateString(today);
             document.getElementById('dash-date-picker').value = toLocalDateString(yesterday);
             document.getElementById('export-start').value = toLocalDateString(yesterday);
@@ -221,8 +243,9 @@
         };
 
         function fetchData() {
-            document.getElementById('statusDot').innerText = "⏳ กำลังดึงข้อมูล...";
-            document.getElementById('statusDot').className = "text-xs text-yellow-500";
+            const statusEl = document.getElementById('statusDot');
+            statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span> กำลังดึงข้อมูล...`;
+            statusEl.className = "text-[11px] font-semibold text-yellow-500 flex items-center gap-1";
             
             fetch(SCRIPT_URL)
             .then(res => res.json())
@@ -240,17 +263,18 @@
                         select.appendChild(opt);
                     });
 
-                    document.getElementById('statusDot').innerText = "🟢 ออนไลน์";
-                    document.getElementById('statusDot').className = "text-xs text-green-400";
+                    statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-green-500"></span> ออนไลน์พร้อมใช้`;
+                    statusEl.className = "text-[11px] font-semibold text-green-400 flex items-center gap-1";
                     renderDashboard();
                 }
             })
             .catch(err => {
-                document.getElementById('statusDot').innerText = "🔴 สัญญาณฐานข้อมูลขัดข้อง";
-                document.getElementById('statusDot').className = "text-xs text-red-500";
+                statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-red-500"></span> ออฟไลน์/ขัดข้อง`;
+                statusEl.className = "text-[11px] font-semibold text-red-400 flex items-center gap-1";
             });
         }
 
+        // คำนวณเวลาสูญเสียอัตโนมัติ
         function calculateLostTime() {
             const tot = parseFloat(document.getElementById('total_time').value) || 0;
             const act = parseFloat(document.getElementById('actual_work_time').value) || 0;
@@ -266,15 +290,15 @@
         document.getElementById('total_time').addEventListener('input', calculateLostTime);
         document.getElementById('actual_work_time').addEventListener('input', calculateLostTime);
 
+        // วาดหน้าแรก (Dashboard)
         function renderDashboard() {
             const selectedDate = document.getElementById('dash-date-picker').value;
-            
             const yRecords = globalData.records.filter(r => r.date === selectedDate);
             const container = document.getElementById('bubble-container');
             container.innerHTML = "";
 
             if(yRecords.length === 0) {
-                container.innerHTML = `<div class="text-center text-slate-500 py-12 bg-slate-950 rounded-2xl border border-slate-900 text-sm">ไม่พบข้อมูลการบันทึกในวันที่เลือก</div>`;
+                container.innerHTML = `<div class="text-center text-slate-500 py-16 bg-slate-900/50 rounded-2xl border border-slate-900 text-xs">ไม่พบสถิติการบันทึกในวันที่เลือก</div>`;
                 document.getElementById('sum-hours').innerHTML = `0 <span class="text-xs font-normal text-slate-500">ชม.</span>`;
                 document.getElementById('sum-shots').innerHTML = `0 <span class="text-xs font-normal text-slate-500">Shot</span>`;
                 document.getElementById('sum-perf').innerText = `0%`;
@@ -284,7 +308,7 @@
             let totalMins = 0, totalShots = 0, totalPerf = 0;
 
             yRecords.forEach(rec => {
-                const mInfo = globalData.machines.find(m => m.id === rec.machine_id) || { name: "เครื่องภายนอก", operator: "ไม่ระบุ", target: 0 };
+                const mInfo = globalData.machines.find(m => m.id === rec.machine_id) || { name: rec.machine_id, operator: "ไม่ระบุ", target: 0 };
                 
                 totalMins += Number(rec.work_mins);
                 totalShots += Number(rec.shots);
@@ -294,15 +318,11 @@
                 if(perfNum <= 1 && perfNum > 0) perfNum = perfNum * 100;
                 totalPerf += perfNum;
 
-                let actualRate = 0;
-                if (rec.work_mins > 0) {
-                    actualRate = (rec.shots * 60) / rec.work_mins;
-                }
-                
+                let actualRate = rec.work_mins > 0 ? (rec.shots * 60) / rec.work_mins : 0;
                 let targetRate = Number(mInfo.target) || 0;
                 let diffRate = actualRate - targetRate;
                 
-                let diffColor = "text-yellow-500";
+                let diffColor = "text-yellow-400";
                 let diffIcon = "⚡";
                 let diffText = "ตามเป้า";
                 
@@ -316,50 +336,51 @@
                     diffText = `ช้ากว่าเป้า ${Math.abs(diffRate).toFixed(1)}`;
                 }
 
-                // ดึงปัญหามาโชว์เสมอถ้ามีการกรอกไว้ (แม้ lost_time จะเป็น 0)
                 const hasIssue = rec.lost_mins > 0 || (rec.issue && rec.issue !== "-" && rec.issue.trim() !== "");
 
                 const card = document.createElement('div');
-                card.className = "glass-card p-4 rounded-2xl flex flex-col gap-2 shadow-md border-l-4 border-l-blue-500";
+                card.className = "bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col gap-2.5 shadow-md border-l-4 border-l-blue-500";
                 card.innerHTML = `
-                    <div class="flex justify-between items-start border-b border-slate-800 pb-2">
+                    <div class="flex justify-between items-start border-b border-slate-800 pb-2.5">
                         <div>
                             <div class="font-bold text-blue-400 text-base">${mInfo.name}</div>
-                            <div class="text-xs text-slate-400">ผู้รับผิดชอบ: ${mInfo.operator} <span class="text-[10px] text-slate-500">(${rec.machine_id})</span></div>
+                            <div class="text-xs text-slate-400">ผู้รับผิดชอบ: <span class="text-slate-200">${mInfo.operator}</span> <span class="text-[10px] text-slate-500">(${rec.machine_id})</span></div>
                         </div>
                         <div class="text-right">
-                            <div class="text-[10px] text-slate-400">ได้จริง (เป้า ${targetRate})</div>
+                            <div class="text-[10px] text-slate-400 font-medium">ความเร็ว (เป้า ${targetRate})</div>
                             <div class="font-bold text-white text-lg leading-tight">${actualRate.toFixed(1)} <span class="text-[10px] text-slate-400 font-normal">S/Hr</span></div>
                             <div class="text-[11px] font-bold ${diffColor} mt-0.5">${diffIcon} ${diffText}</div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                        <div><span class="text-slate-400">เวลาทำงานจริง:</span> <span class="text-yellow-500 font-bold">${rec.work_mins} นาที</span></div>
+                    <div class="grid grid-cols-2 gap-y-1.5 gap-x-2 text-xs pt-0.5">
+                        <div><span class="text-slate-400">เวลาทำงานจริง:</span> <span class="text-yellow-400 font-bold">${rec.work_mins} นาที</span></div>
                         <div><span class="text-slate-400">ผลผลิตสะสม:</span> <span class="text-white font-bold">${rec.shots.toLocaleString()} Shot</span></div>
-                        <div><span class="text-slate-400">จำนวนชิ้นงาน:</span> <span class="text-white">${rec.pieces.toLocaleString()} ชิ้น</span></div>
-                        <div><span class="text-slate-400">วิ่งงานรวม:</span> <span class="text-white">${rec.items} รายการ</span></div>
+                        <div><span class="text-slate-400">จำนวนชิ้นงาน:</span> <span class="text-white font-medium">${rec.pieces.toLocaleString()} ชิ้น</span></div>
+                        <div><span class="text-slate-400">วิ่งงานรวม:</span> <span class="text-white font-medium">${rec.items} รายการ</span></div>
                     </div>
                     ${hasIssue ? `
-                        <div class="text-[11px] text-red-400 bg-red-950/30 p-2.5 rounded-xl border border-red-900/30 mt-1">
-                            <strong>⚠️ เวลาสูญเสีย:</strong> ${rec.lost_mins} นาที <br>
-                            <strong>ปัญหา [${rec.issue_no}]:</strong> ${rec.issue}
+                        <div class="text-xs text-red-300 bg-red-950/40 p-2.5 rounded-xl border border-red-900/40 mt-1 space-y-0.5">
+                            <div><strong class="text-red-400">⚠️ เวลาสูญเสีย:</strong> ${rec.lost_mins} นาที</div>
+                            <div><strong class="text-red-400">ปัญหา [${rec.issue_no}]:</strong> ${rec.issue}</div>
                         </div>
                     ` : ''}
                 `;
                 container.appendChild(card);
             });
 
-            document.getElementById('sum-hours').innerHTML = `${(totalMins/60).toFixed(1)} <span class="text-xs font-normal text-slate-500">ชม.</span>`;
-            document.getElementById('sum-shots').innerHTML = `${totalShots.toLocaleString()} <span class="text-xs font-normal text-slate-500">Shot</span>`;
+            document.getElementById('sum-hours').innerHTML = `${(totalMins/60).toFixed(1)} <span class="text-xs font-normal text-slate-400">ชม.</span>`;
+            document.getElementById('sum-shots').innerHTML = `${totalShots.toLocaleString()} <span class="text-xs font-normal text-slate-400">Shot</span>`;
             document.getElementById('sum-perf').innerText = `${(totalPerf / yRecords.length).toFixed(0)}%`;
         }
 
+        // บันทึกสถิติ
         document.getElementById('recordForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if(SCRIPT_URL.includes("ใส่_URL")) { alert("กรุณาติดตั้งลิงก์ Web App ในโค้ดก่อนทำการบันทึกข้อมูล"); return; }
+            if(SCRIPT_URL.includes("ใส่_URL")) { alert("กรุณาติดตั้งลิงก์ Web App ในโค้ดก่อนทำการบันทึกข้อมูลครับ"); return; }
 
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "⏳ ระบบกำลังส่งค่าไปที่ Google Sheets...";
+            btn.disabled = true; 
+            btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> กำลังส่งข้อมูล...`;
 
             const payload = {
                 date: document.getElementById('date').value,
@@ -370,47 +391,42 @@
                 total_time: document.getElementById('total_time').value,
                 actual_work_time: document.getElementById('actual_work_time').value,
                 lost_time: document.getElementById('lost_time').value,
-                issue_no: document.getElementById('issue_no').value,
-                issue_detail: document.getElementById('issue_detail').value,
+                issue_no: document.getElementById('issue_no').value || "-",
+                issue_detail: document.getElementById('issue_detail').value || "-",
                 note: "-" 
             };
 
             fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(r => r.json()).then(d => {
                 if(d.status === "success"){
-                    alert("✅ บันทึกข้อมูลเข้าตารางเรียบร้อยแล้ว!");
+                    alert("✅ บันทึกข้อมูลเข้าตาราง Google Sheets เรียบร้อย!");
                     document.getElementById('recordForm').reset();
-                    document.getElementById('date').valueAsDate = new Date();
+                    document.getElementById('date').value = toLocalDateString(new Date());
                     fetchData();
                     switchTab('dashboard');
                 } else {
                     alert("❌ เกิดข้อผิดพลาดของสคริปต์: " + d.msg);
                 }
-            }).catch(e => alert("❌ ไม่สามารถส่งชุดข้อมูลไปยังคลาวด์ได้"))
+            }).catch(e => alert("❌ ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบอินเทอร์เน็ต"))
             .finally(() => {
-                btn.disabled = false; btn.innerText = "💾 บันทึกข้อมูลเข้าระบบ";
+                btn.disabled = false; 
+                btn.innerHTML = `<span>💾</span> บันทึกข้อมูลเข้าระบบ`;
             });
         });
 
-        // ============= ส่วนของการ Export (อิงจากช่วงวันที่) =============
         function getFilteredRecords() {
             const startStr = document.getElementById('export-start').value;
             const endStr = document.getElementById('export-end').value;
-            
-            // กรองข้อมูลที่อยู่ในช่วง Start ถึง End
-            return globalData.records.filter(r => {
-                return r.date >= startStr && r.date <= endStr;
-            });
+            return globalData.records.filter(r => r.date >= startStr && r.date <= endStr);
         }
 
         function previewExport() {
-            const recs = getFilteredRecords();
-            document.getElementById('export-count').innerText = recs.length;
+            document.getElementById('export-count').innerText = getFilteredRecords().length;
         }
 
         function exportExcel() {
             const recs = getFilteredRecords();
-            if(recs.length === 0) { alert("ไม่มีชุดข้อมูลที่พบในช่วงเวลาดังกล่าว"); return; }
+            if(recs.length === 0) { alert("ไม่มีชุดข้อมูลที่พบในช่วงเวลาดังกล่าวครับ"); return; }
 
             const exportData = recs.map(r => {
                 const m = globalData.machines.find(m => m.id === r.machine_id) || {};
@@ -431,7 +447,7 @@
                     "เวลาทำงานจริง (นาที)": r.work_mins,
                     "เวลาสูญเสีย (นาที)": r.lost_mins,
                     "ความเร็วจริง (Shot/Hr)": actualRate.toFixed(1),
-                    "ประสิทธิภาพการคำนวณ": p,
+                    "ประสิทธิภาพ": p,
                     "โค้ดปัญหา": r.issue_no,
                     "รายละเอียดปัญหา": r.issue
                 };
@@ -446,54 +462,45 @@
             XLSX.writeFile(wb, `รายงานผลิต_${startDate}_ถึง_${endDate}.xlsx`);
         }
 
-        // ============= จัดรูปแบบ ก๊อปส่ง LINE แบบกลุ่มตามชื่อเครื่อง =============
+        // ระบบก๊อปปี้ส่ง LINE (เป๊ะตามฟอร์แมตใหม่: จัดกลุ่มเครื่องจักร + โชว์ปัญหาทุกตัว)
         function copyForLINE() {
             const recs = getFilteredRecords();
-            if(recs.length === 0) { alert("ไม่พบข้อมูลที่จะทำการคัดลอก"); return; }
+            if(recs.length === 0) { alert("ไม่พบข้อมูลที่จะทำการคัดลอกครับ"); return; }
             
             const startDate = document.getElementById('export-start').value.split('-').reverse().join('/');
             const endDate = document.getElementById('export-end').value.split('-').reverse().join('/');
             
-            let text = `📊 สรุปรายงานบันทึกการทำงาน\n📅 ${startDate} ถึง ${endDate}\n\n`;
+            let text = `📊 สรุปรายงานบันทึกการทำงาน\n📅 ตั้งแต่ ${startDate} ถึง ${endDate}\n\n`;
             
-            // 1. จัดกลุ่มข้อมูลแยกตามรหัสเครื่องจักร
             const groupedRecords = {};
             recs.forEach(r => {
-                if(!groupedRecords[r.machine_id]) {
-                    groupedRecords[r.machine_id] = [];
-                }
+                if(!groupedRecords[r.machine_id]) groupedRecords[r.machine_id] = [];
                 groupedRecords[r.machine_id].push(r);
             });
 
-            // 2. วนลูปสร้างข้อความทีละเครื่อง
             for (const machine_id in groupedRecords) {
                 const machineRecords = groupedRecords[machine_id];
                 const mInfo = globalData.machines.find(m => m.id === machine_id) || { name: machine_id, operator: "ไม่ระบุ" };
                 
-                text += `🏭 เครื่อง: ${mInfo.name} (พนักงาน: ${mInfo.operator})\n`;
+                text += `(เครื่อง ${mInfo.name} พนักงาน ${mInfo.operator}\n`;
                 
-                // เรียงวันที่จากเก่าไปใหม่
                 machineRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
                 
                 machineRecords.forEach(r => {
-                    // แปลงวันที่ YYYY-MM-DD เป็น DD/MM/YY
                     const dateParts = r.date.split('-');
-                    const dateStr = `${dateParts[2]}/${dateParts[1]}/${dateParts[0].substring(2)}`;
+                    const dateStr = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
                     
-                    let actualRate = r.work_mins > 0 ? (r.shots * 60) / r.work_mins : 0;
+                    text += `วันที่ ${dateStr} ทำได้ ${r.shots.toLocaleString()} Shot\n`;
                     
-                    text += ` • วันที่ ${dateStr}: ทำได้ ${r.shots.toLocaleString()} Shot\n`;
-                    
-                    // แทรกปัญหาหากมีการกรอก
                     const hasIssue = r.lost_mins > 0 || (r.issue && r.issue !== "-" && r.issue.trim() !== "");
                     if(hasIssue) {
-                        text += `   ⚠️ ปัญหา: ${r.issue} (สูญเสีย ${r.lost_mins} นาที)\n`;
+                        text += `   ⚠️ ปัญหา: ${r.issue} (เสียเวลา ${r.lost_mins} นาที)\n`;
                     }
                 });
-                text += `-----------------\n`;
+                text += `)\n-----------------\n`;
             }
 
-            navigator.clipboard.writeText(text).then(() => alert("📋 คัดลอกข้อความสรุปเรียบร้อย! สามารถเปิดแอป LINE แล้วกดวางลงกลุ่มได้ทันที"));
+            navigator.clipboard.writeText(text).then(() => alert("📋 คัดลอกข้อความสรุปเรียบร้อย! นำไปวางในกลุ่ม LINE ได้ทันทีครับ"));
         }
     </script>
 </body>
