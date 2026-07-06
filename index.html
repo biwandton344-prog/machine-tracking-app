@@ -1,465 +1,501 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>บันทึกการทำงาน</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #000000; color: #f8fafc; }
-        .tab-btn.active { color: #eab308; border-bottom: 2px solid #eab308; }
-        .glass-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.4); }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>บันทึกการทำงาน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #000000; color: #f8fafc; }
+        .tab-btn.active { color: #eab308; border-bottom: 2px solid #eab308; }
+        .glass-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.4); }
+    </style>
 </head>
 <body class="min-h-screen pb-24">
 
-    <div class="fixed bottom-0 w-full bg-slate-950 border-t border-slate-800 flex justify-around p-3 z-50 text-slate-400 text-xs font-bold shadow-[0_-10px_25px_rgba(0,0,0,0.8)]">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex flex-col items-center p-2 w-1/3">
-            <span class="text-xl mb-1">📊</span> ภาพรวม
-        </button>
-        <button onclick="switchTab('record')" id="tab-record" class="tab-btn flex flex-col items-center p-2 w-1/3">
-            <span class="text-xl mb-1">📝</span> บันทึก
-        </button>
-        <button onclick="switchTab('export')" id="tab-export" class="tab-btn flex flex-col items-center p-2 w-1/3">
-            <span class="text-xl mb-1">📤</span> ส่งออก
-        </button>
-    </div>
+    <!-- เมนูด้านล่าง -->
+    <div class="fixed bottom-0 w-full bg-slate-950 border-t border-slate-800 flex justify-around p-3 z-50 text-slate-400 text-xs font-bold shadow-[0_-10px_25px_rgba(0,0,0,0.8)]">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex flex-col items-center p-2 w-1/3">
+            <span class="text-xl mb-1">📊</span> ภาพรวม
+        </button>
+        <button onclick="switchTab('record')" id="tab-record" class="tab-btn flex flex-col items-center p-2 w-1/3">
+            <span class="text-xl mb-1">📝</span> บันทึก
+        </button>
+        <button onclick="switchTab('export')" id="tab-export" class="tab-btn flex flex-col items-center p-2 w-1/3">
+            <span class="text-xl mb-1">📤</span> ส่งออก
+        </button>
+    </div>
 
-    <div class="bg-slate-950 p-4 flex justify-between items-center border-b border-blue-900 shadow-md sticky top-0 z-40">
-        <div>
-            <h1 class="text-lg font-bold text-blue-500">🏭 บันทึกการทำงาน</h1>
-            <p id="statusDot" class="text-xs text-yellow-500">⏳ กำลังเชื่อมต่อฐานข้อมูล...</p>
-        </div>
-    </div>
+    <!-- ส่วนหัวของแอป -->
+    <div class="bg-slate-950 p-4 flex justify-between items-center border-b border-blue-900 shadow-md sticky top-0 z-40">
+        <div>
+            <h1 class="text-lg font-bold text-blue-500">🏭 บันทึกการทำงาน</h1>
+            <p id="statusDot" class="text-xs text-yellow-500">⏳ กำลังเชื่อมต่อฐานข้อมูล...</p>
+        </div>
+    </div>
 
-    <div class="max-w-md mx-auto p-4 space-y-4">
+    <div class="max-w-md mx-auto p-4 space-y-4">
 
-        <div id="page-dashboard" class="space-y-4">
-            <div class="flex justify-between items-center">
-                <h2 class="font-bold text-base text-white flex items-center gap-1">
-                    <span class="inline-block w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span> สถิติผลงานประจำวัน
-                </h2>
-                <div class="bg-blue-950/80 text-blue-400 text-xs px-3 py-1 rounded-xl border border-blue-800 font-bold" id="dash-date">เมื่อวาน: --/--/----</div>
-            </div>
+        <!-- ================= หน้าที่ 1: DASHBOARD (ภาพรวม) ================= -->
+        <div id="page-dashboard" class="space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="font-bold text-base text-white flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span> สถิติผลงานประจำวัน
+                </h2>
+                <!-- เปลี่ยนเป็นช่องเลือกวันที่ -->
+                <input type="date" id="dash-date-picker" onchange="renderDashboard()" class="bg-slate-900 text-yellow-500 text-xs px-2 py-1.5 rounded-xl border border-slate-700 outline-none font-bold">
+            </div>
 
-            <div class="glass-card rounded-2xl p-4 flex justify-between items-center text-center shadow-lg">
-                <div class="w-1/3">
-                    <div class="text-[10px] text-slate-400 mb-0.5">ทำงานจริงรวม</div>
-                    <div id="sum-hours" class="text-lg font-bold text-yellow-500">0 <span class="text-xs font-normal text-slate-400">ชม.</span></div>
-                </div>
-                <div class="w-px h-8 bg-slate-800"></div>
-                <div class="w-1/3">
-                    <div class="text-[10px] text-slate-400 mb-0.5">ผลิตได้รวม</div>
-                    <div id="sum-shots" class="text-lg font-bold text-blue-400">0 <span class="text-xs font-normal text-slate-400">Shot</span></div>
-                </div>
-                <div class="w-px h-8 bg-slate-800"></div>
-                <div class="w-1/3">
-                    <div class="text-[10px] text-slate-400 mb-0.5">ประสิทธิภาพเฉลี่ย</div>
-                    <div id="sum-perf" class="text-lg font-bold text-green-400">0%</div>
-                </div>
-            </div>
+            <!-- กล่องสรุปภาพรวมทั้งหมด -->
+            <div class="glass-card rounded-2xl p-4 flex justify-between items-center text-center shadow-lg">
+                <div class="w-1/3">
+                    <div class="text-[10px] text-slate-400 mb-0.5">ทำงานจริงรวม</div>
+                    <div id="sum-hours" class="text-lg font-bold text-yellow-500">0 <span class="text-xs font-normal text-slate-400">ชม.</span></div>
+                </div>
+                <div class="w-px h-8 bg-slate-800"></div>
+                <div class="w-1/3">
+                    <div class="text-[10px] text-slate-400 mb-0.5">ผลิตได้รวม</div>
+                    <div id="sum-shots" class="text-lg font-bold text-blue-400">0 <span class="text-xs font-normal text-slate-400">Shot</span></div>
+                </div>
+                <div class="w-px h-8 bg-slate-800"></div>
+                <div class="w-1/3">
+                    <div class="text-[10px] text-slate-400 mb-0.5">ประสิทธิภาพเฉลี่ย</div>
+                    <div id="sum-perf" class="text-lg font-bold text-green-400">0%</div>
+                </div>
+            </div>
 
-            <div id="bubble-container" class="space-y-3">
-                <div class="text-center text-slate-500 text-sm py-12">กำลังดึงข้อมูลเครื่องจักร...</div>
-            </div>
-        </div>
-
-
-        <div id="page-record" class="hidden space-y-4">
-            <h2 class="font-bold text-base text-white pl-1">📝 กรอกข้อมูลประจำกะ</h2>
-            <form id="recordForm" class="space-y-4">
-                
-                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
-                    <div class="flex gap-3">
-                        <div class="w-2/5">
-                            <label class="block text-[11px] font-bold mb-1 text-blue-400">วันที่ทำงาน</label>
-                            <input type="date" id="date" required class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white focus:border-yellow-500 outline-none">
-                        </div>
-                        <div class="w-3/5">
-                            <label class="block text-[11px] font-bold mb-1 text-blue-400">ชื่อเครื่องจักร</label>
-                            <select id="machine_id" required class="w-full text-sm font-bold rounded-xl p-3 bg-slate-900 border border-slate-700 text-yellow-500 focus:border-yellow-500 outline-none">
-                                <option value="">กำลังโหลด...</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
-                    <div class="text-xs font-bold text-blue-400 mb-1">📊 ข้อมูลปริมาณงาน</div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-1 text-center">พาร์ท (รายการ)</label>
-                            <input type="number" id="total_items" value="1" required class="w-full text-base font-bold text-white rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-1 text-center">ยอดรวม (Shot)</label>
-                            <input type="number" id="total_shots" required class="w-full text-base font-bold text-yellow-500 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-1 text-center">ยอดรวม (ชิ้น)</label>
-                            <input type="number" id="total_pieces" required class="w-full text-base font-bold text-blue-400 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md border-red-900/40">
-                    <div class="text-xs font-bold text-red-400 mb-1">⏳ เวลาการผลิต (นาที)</div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <label class="block text-[10px] text-slate-400 mb-1 text-center">เวลารวมเปิดเครื่อง</label>
-                            <input type="number" id="total_time" required class="w-full text-base font-bold text-white rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center" placeholder="เช่น 480">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-green-400 mb-1 text-center">เวลาทำงานจริง</label>
-                            <input type="number" id="actual_work_time" required class="w-full text-base font-bold text-green-400 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center" placeholder="เช่น 450">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-red-400 mb-1 text-center">เวลาสูญเสีย (ออโต้)</label>
-                            <input type="number" id="lost_time" readonly class="w-full text-base font-bold text-red-500 rounded-xl p-2.5 bg-red-950/40 border border-red-900/60 outline-none text-center cursor-not-allowed" placeholder="0">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card p-3 rounded-2xl shadow-md">
-                    <div class="text-[11px] font-bold text-slate-400 mb-2">⚠️ บันทึกปัญหาหน้างาน (ถ้ามี)</div>
-                    <div class="flex gap-2">
-                        <input type="text" id="issue_no" placeholder="เบอร์" class="w-1/3 text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-white outline-none">
-                        <input type="text" id="issue_detail" placeholder="รายละเอียด..." class="w-2/3 text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-white outline-none">
-                    </div>
-                </div>
-
-                <button type="submit" id="submitBtn" class="w-full bg-blue-600 active:bg-blue-800 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-blue-600/20 text-base transition-colors">
-                    💾 บันทึกข้อมูลเข้าระบบ
-                </button>
-            </form>
-        </div>
+            <div id="bubble-container" class="space-y-3">
+                <div class="text-center text-slate-500 text-sm py-12">กำลังดึงข้อมูลเครื่องจักร...</div>
+            </div>
+        </div>
 
 
-        <div id="page-export" class="hidden space-y-4">
-            <h2 class="font-bold text-base text-white pl-1">📤 จัดการข้อมูลและการส่งออก</h2>
-            
-            <div class="glass-card rounded-2xl p-4 space-y-4 shadow-md">
-                <div>
-                    <label class="block text-xs font-bold text-blue-400 mb-2">เลือกช่วงเวลาข้อมูลที่ต้องการกรอง</label>
-                    <select id="export-period" onchange="previewExport()" class="w-full text-base rounded-xl p-3 bg-slate-900 border border-slate-700 text-yellow-500 font-bold outline-none">
-                        <option value="yesterday">ข้อมูลเมื่อวาน</option>
-                        <option value="today">ข้อมูลวันนี้</option>
-                        <option value="week">ข้อมูลสัปดาห์นี้</option>
-                        <option value="month">ข้อมูลเดือนนี้</option>
-                        <option value="all">ข้อมูลทั้งหมดที่บันทึกไว้</option>
-                    </select>
-                </div>
+        <!-- ================= หน้าที่ 2: RECORD (บันทึกข้อมูล) ================= -->
+        <div id="page-record" class="hidden space-y-4">
+            <h2 class="font-bold text-base text-white pl-1">📝 กรอกข้อมูลประจำกะ</h2>
+            <form id="recordForm" class="space-y-4">
+                
+                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
+                    <div class="flex gap-3">
+                        <div class="w-2/5">
+                            <label class="block text-[11px] font-bold mb-1 text-blue-400">วันที่ทำงาน</label>
+                            <input type="date" id="date" required class="w-full text-sm rounded-xl p-3 bg-slate-900 border border-slate-700 text-white focus:border-yellow-500 outline-none">
+                        </div>
+                        <div class="w-3/5">
+                            <label class="block text-[11px] font-bold mb-1 text-blue-400">ชื่อเครื่องจักร</label>
+                            <select id="machine_id" required class="w-full text-sm font-bold rounded-xl p-3 bg-slate-900 border border-slate-700 text-yellow-500 focus:border-yellow-500 outline-none">
+                                <option value="">กำลังโหลด...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
-                    <div class="text-xs text-slate-400 mb-1">จำนวนชุดข้อมูลในระบบที่ตรวจพบ</div>
-                    <div class="text-2xl font-bold text-white"><span id="export-count" class="text-blue-500">0</span> ชุดข้อมูล</div>
-                </div>
+                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md">
+                    <div class="text-xs font-bold text-blue-400 mb-1">📊 ข้อมูลปริมาณงาน</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1 text-center">พาร์ท (รายการ)</label>
+                            <input type="number" id="total_items" value="1" required class="w-full text-base font-bold text-white rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1 text-center">ยอดรวม (Shot)</label>
+                            <input type="number" id="total_shots" required class="w-full text-base font-bold text-yellow-500 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1 text-center">ยอดรวม (ชิ้น)</label>
+                            <input type="number" id="total_pieces" required class="w-full text-base font-bold text-blue-400 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center">
+                        </div>
+                    </div>
+                </div>
 
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button onclick="exportExcel()" class="bg-yellow-600 active:bg-yellow-700 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm">
-                        <span>📊</span> โหลด Excel
-                    </button>
-                    <button onclick="copyForLINE()" class="bg-blue-600 active:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm">
-                        <span>📋</span> ก๊อปส่ง LINE
-                    </button>
-                </div>
-            </div>
-        </div>
+                <div class="glass-card p-4 rounded-2xl space-y-3 shadow-md border-red-900/40">
+                    <div class="text-xs font-bold text-red-400 mb-1">⏳ เวลาการผลิต (นาที)</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1 text-center">เวลารวมเปิดเครื่อง</label>
+                            <input type="number" id="total_time" required class="w-full text-base font-bold text-white rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center" placeholder="เช่น 480">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-green-400 mb-1 text-center">เวลาทำงานจริง</label>
+                            <input type="number" id="actual_work_time" required class="w-full text-base font-bold text-green-400 rounded-xl p-2.5 bg-slate-950 border border-slate-800 outline-none text-center" placeholder="เช่น 450">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-red-400 mb-1 text-center">เวลาสูญเสีย (ออโต้)</label>
+                            <input type="number" id="lost_time" readonly class="w-full text-base font-bold text-red-500 rounded-xl p-2.5 bg-red-950/40 border border-red-900/60 outline-none text-center cursor-not-allowed" placeholder="0">
+                        </div>
+                    </div>
+                </div>
 
-    </div>
+                <div class="glass-card p-3 rounded-2xl shadow-md">
+                    <div class="text-[11px] font-bold text-slate-400 mb-2">⚠️ บันทึกปัญหาหน้างาน (ถ้ามี)</div>
+                    <div class="flex gap-2">
+                        <input type="text" id="issue_no" placeholder="เบอร์" class="w-1/3 text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-white outline-none">
+                        <input type="text" id="issue_detail" placeholder="รายละเอียด..." class="w-2/3 text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-white outline-none">
+                    </div>
+                </div>
 
-    <script>
-        // =====================================================================
-        // 🚨 นำ URL ของ Apps Script มาวางแทนข้อความในบรรทัดด้านล่างนี้ 🚨
-        // =====================================================================
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyv5DLe2CSITx9sgp32gfkdpNOgyu_2l_uVmHSS9VFSnEDkfIT_srFVJ1R1yDgXaIl2/exec";
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 active:bg-blue-800 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-blue-600/20 text-base transition-colors">
+                    💾 บันทึกข้อมูลเข้าระบบ
+                </button>
+            </form>
+        </div>
 
-        let globalData = { machines: [], records: [] };
 
-        function switchTab(tabId) {
-            ['dashboard', 'record', 'export'].forEach(id => {
-                document.getElementById(`page-${id}`).classList.add('hidden');
-                document.getElementById(`tab-${id}`).classList.remove('active');
-            });
-            document.getElementById(`page-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabId}`).classList.add('active');
+        <!-- ================= หน้าที่ 3: EXPORT (จัดการข้อมูล) ================= -->
+        <div id="page-export" class="hidden space-y-4">
+            <h2 class="font-bold text-base text-white pl-1">📤 จัดการข้อมูลและการส่งออก</h2>
+            
+            <div class="glass-card rounded-2xl p-4 space-y-4 shadow-md">
+                
+                <div class="text-xs font-bold text-blue-400 mb-2">เลือกช่วงวันที่ต้องการดึงข้อมูล</div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">ตั้งแต่วันที่</label>
+                        <input type="date" id="export-start" onchange="previewExport()" class="w-full text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-yellow-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">ถึงวันที่</label>
+                        <input type="date" id="export-end" onchange="previewExport()" class="w-full text-sm rounded-xl p-2.5 bg-slate-900 border border-slate-700 text-yellow-500 outline-none">
+                    </div>
+                </div>
 
-            if(tabId === 'dashboard') renderDashboard();
-            if(tabId === 'export') previewExport();
-        }
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400 mb-1">จำนวนชุดข้อมูลที่พบในช่วงเวลานี้</div>
+                    <div class="text-2xl font-bold text-white"><span id="export-count" class="text-blue-500">0</span> ชุดข้อมูล</div>
+                </div>
 
-        window.onload = function() {
-            document.getElementById('date').valueAsDate = new Date();
-            if(!SCRIPT_URL.includes("ใส่_URL")) {
-                fetchData();
-            }
-        };
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="exportExcel()" class="bg-yellow-600 active:bg-yellow-700 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm">
+                        <span>📊</span> โหลด Excel
+                    </button>
+                    <button onclick="copyForLINE()" class="bg-blue-600 active:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm">
+                        <span>📋</span> ก๊อปส่ง LINE
+                    </button>
+                </div>
+            </div>
+        </div>
 
-        function fetchData() {
-            document.getElementById('statusDot').innerText = "⏳ กำลังดึงข้อมูล...";
-            document.getElementById('statusDot').className = "text-xs text-yellow-500";
-            
-            fetch(SCRIPT_URL)
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === "success") {
-                    globalData = data;
-                    
-                    const select = document.getElementById('machine_id');
-                    select.innerHTML = '<option value="">-- กรุณาเลือกเครื่องจักร --</option>';
-                    globalData.machines.forEach(m => {
-                        const opt = document.createElement('option');
-                        opt.value = m.id;
-                        opt.dataset.target = m.target;
-                        opt.innerText = `${m.name} [${m.id}]`;
-                        select.appendChild(opt);
-                    });
+    </div>
 
-                    document.getElementById('statusDot').innerText = "🟢 ออนไลน์";
-                    document.getElementById('statusDot').className = "text-xs text-green-400";
-                    renderDashboard();
-                }
-            })
-            .catch(err => {
-                document.getElementById('statusDot').innerText = "🔴 สัญญาณฐานข้อมูลขัดข้อง";
-                document.getElementById('statusDot').className = "text-xs text-red-500";
-            });
-        }
+    <script>
+        // =====================================================================
+        // 🚨 นำ URL ของ Apps Script มาวางแทนข้อความในบรรทัดด้านล่างนี้ 🚨
+        // =====================================================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyv5DLe2CSITx9sgp32gfkdpNOgyu_2l_uVmHSS9VFSnEDkfIT_srFVJ1R1yDgXaIl2/exec";
 
-        // --- ระบบคำนวณเวลาสูญเสียอัตโนมัติ ---
-        function calculateLostTime() {
-            const tot = parseFloat(document.getElementById('total_time').value) || 0;
-            const act = parseFloat(document.getElementById('actual_work_time').value) || 0;
-            const lostInput = document.getElementById('lost_time');
-            
-            if (tot > 0 && act > 0) {
-                const lost = tot - act;
-                lostInput.value = lost >= 0 ? lost : 0; // ป้องกันค่าติดลบถ้ากรอกผิด
-            } else {
-                lostInput.value = "";
-            }
-        }
-        document.getElementById('total_time').addEventListener('input', calculateLostTime);
-        document.getElementById('actual_work_time').addEventListener('input', calculateLostTime);
-        // ------------------------------------
+        let globalData = { machines: [], records: [] };
 
-        function getYesterdayString() {
-            const y = new Date();
-            y.setDate(y.getDate() - 1);
-            return y.getFullYear() + "-" + String(y.getMonth()+1).padStart(2,'0') + "-" + String(y.getDate()).padStart(2,'0');
-        }
+        function switchTab(tabId) {
+            ['dashboard', 'record', 'export'].forEach(id => {
+                document.getElementById(`page-${id}`).classList.add('hidden');
+                document.getElementById(`tab-${id}`).classList.remove('active');
+            });
+            document.getElementById(`page-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
 
-        function getTodayString() {
-            const y = new Date();
-            return y.getFullYear() + "-" + String(y.getMonth()+1).padStart(2,'0') + "-" + String(y.getDate()).padStart(2,'0');
-        }
+            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'export') previewExport();
+        }
 
-        function renderDashboard() {
-            const yesterday = getYesterdayString();
-            document.getElementById('dash-date').innerText = "เมื่อวาน: " + yesterday.split('-').reverse().join('/');
-            
-            const yRecords = globalData.records.filter(r => r.date === yesterday);
-            const container = document.getElementById('bubble-container');
-            container.innerHTML = "";
+        // ฟังก์ชันช่วยจัดการวันที่ให้อยู่ในฟอร์แมต YYYY-MM-DD
+        function toLocalDateString(d) {
+            return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+        }
 
-            if(yRecords.length === 0) {
-                container.innerHTML = `<div class="text-center text-slate-500 py-12 bg-slate-950 rounded-2xl border border-slate-900 text-sm">ไม่มีข้อมูลประวัติการทำงานของเมื่อวานในระบบ</div>`;
-                document.getElementById('sum-hours').innerHTML = `0 <span class="text-xs font-normal text-slate-500">ชม.</span>`;
-                document.getElementById('sum-shots').innerHTML = `0 <span class="text-xs font-normal text-slate-500">Shot</span>`;
-                document.getElementById('sum-perf').innerText = `0%`;
-                return;
-            }
+        window.onload = function() {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            // ตั้งค่าวันที่เริ่มต้นให้ทุกช่อง
+            document.getElementById('date').value = toLocalDateString(today);
+            document.getElementById('dash-date-picker').value = toLocalDateString(yesterday);
+            document.getElementById('export-start').value = toLocalDateString(yesterday);
+            document.getElementById('export-end').value = toLocalDateString(today);
 
-            let totalMins = 0, totalShots = 0, totalPerf = 0;
+            if(!SCRIPT_URL.includes("ใส่_URL")) {
+                fetchData();
+            }
+        };
 
-            yRecords.forEach(rec => {
-                const mInfo = globalData.machines.find(m => m.id === rec.machine_id) || { name: "เครื่องภายนอก", operator: "ไม่ระบุ", target: 0 };
-                
-                totalMins += Number(rec.work_mins);
-                totalShots += Number(rec.shots);
-                
-                let perfNum = parseFloat(rec.perf);
-                if(isNaN(perfNum)) perfNum = 0;
-                if(perfNum <= 1 && perfNum > 0) perfNum = perfNum * 100;
-                totalPerf += perfNum;
+        function fetchData() {
+            document.getElementById('statusDot').innerText = "⏳ กำลังดึงข้อมูล...";
+            document.getElementById('statusDot').className = "text-xs text-yellow-500";
+            
+            fetch(SCRIPT_URL)
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    globalData = data;
+                    
+                    const select = document.getElementById('machine_id');
+                    select.innerHTML = '<option value="">-- กรุณาเลือกเครื่องจักร --</option>';
+                    globalData.machines.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.dataset.target = m.target;
+                        opt.innerText = `${m.name} [${m.id}]`;
+                        select.appendChild(opt);
+                    });
 
-                let actualRate = 0;
-                if (rec.work_mins > 0) {
-                    actualRate = (rec.shots * 60) / rec.work_mins;
-                }
-                
-                let targetRate = Number(mInfo.target) || 0;
-                let diffRate = actualRate - targetRate;
-                
-                let diffColor = "text-yellow-500";
-                let diffIcon = "⚡";
-                let diffText = "ตามเป้า";
-                
-                if (diffRate > 0) {
-                    diffColor = "text-green-400";
-                    diffIcon = "📈";
-                    diffText = `เร็วกว่าเป้า +${diffRate.toFixed(1)}`;
-                } else if (diffRate < 0) {
-                    diffColor = "text-red-400";
-                    diffIcon = "📉";
-                    diffText = `ช้ากว่าเป้า ${Math.abs(diffRate).toFixed(1)}`;
-                }
+                    document.getElementById('statusDot').innerText = "🟢 ออนไลน์";
+                    document.getElementById('statusDot').className = "text-xs text-green-400";
+                    renderDashboard();
+                }
+            })
+            .catch(err => {
+                document.getElementById('statusDot').innerText = "🔴 สัญญาณฐานข้อมูลขัดข้อง";
+                document.getElementById('statusDot').className = "text-xs text-red-500";
+            });
+        }
 
-                const card = document.createElement('div');
-                card.className = "glass-card p-4 rounded-2xl flex flex-col gap-2 shadow-md border-l-4 border-l-blue-500";
-                card.innerHTML = `
-                    <div class="flex justify-between items-start border-b border-slate-800 pb-2">
-                        <div>
-                            <div class="font-bold text-blue-400 text-base">${mInfo.name}</div>
-                            <div class="text-xs text-slate-400">ผู้รับผิดชอบ: ${mInfo.operator} <span class="text-[10px] text-slate-500">(${rec.machine_id})</span></div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-[10px] text-slate-400">ได้จริง (เป้า ${targetRate})</div>
-                            <div class="font-bold text-white text-lg leading-tight">${actualRate.toFixed(1)} <span class="text-[10px] text-slate-400 font-normal">S/Hr</span></div>
-                            <div class="text-[11px] font-bold ${diffColor} mt-0.5">${diffIcon} ${diffText}</div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                        <div><span class="text-slate-400">เวลาทำงานจริง:</span> <span class="text-yellow-500 font-bold">${rec.work_mins} นาที</span></div>
-                        <div><span class="text-slate-400">ผลผลิตสะสม:</span> <span class="text-white font-bold">${rec.shots.toLocaleString()} Shot</span></div>
-                        <div><span class="text-slate-400">จำนวนชิ้นงาน:</span> <span class="text-white">${rec.pieces.toLocaleString()} ชิ้น</span></div>
-                        <div><span class="text-slate-400">วิ่งงานรวม:</span> <span class="text-white">${rec.items} รายการ</span></div>
-                    </div>
-                    ${rec.lost_mins > 0 ? `
-                        <div class="text-[11px] text-red-400 bg-red-950/30 p-2.5 rounded-xl border border-red-900/30 mt-1">
-                            <strong>⚠️ เวลาสูญเสีย:</strong> ${rec.lost_mins} นาที <br>
-                            <strong>ปัญหา [${rec.issue_no}]:</strong> ${rec.issue}
-                        </div>
-                    ` : ''}
-                `;
-                container.appendChild(card);
-            });
+        function calculateLostTime() {
+            const tot = parseFloat(document.getElementById('total_time').value) || 0;
+            const act = parseFloat(document.getElementById('actual_work_time').value) || 0;
+            const lostInput = document.getElementById('lost_time');
+            
+            if (tot > 0 && act > 0) {
+                const lost = tot - act;
+                lostInput.value = lost >= 0 ? lost : 0; 
+            } else {
+                lostInput.value = "";
+            }
+        }
+        document.getElementById('total_time').addEventListener('input', calculateLostTime);
+        document.getElementById('actual_work_time').addEventListener('input', calculateLostTime);
 
-            document.getElementById('sum-hours').innerHTML = `${(totalMins/60).toFixed(1)} <span class="text-xs font-normal text-slate-500">ชม.</span>`;
-            document.getElementById('sum-shots').innerHTML = `${totalShots.toLocaleString()} <span class="text-xs font-normal text-slate-500">Shot</span>`;
-            document.getElementById('sum-perf').innerText = `${(totalPerf / yRecords.length).toFixed(0)}%`;
-        }
+        function renderDashboard() {
+            const selectedDate = document.getElementById('dash-date-picker').value;
+            
+            const yRecords = globalData.records.filter(r => r.date === selectedDate);
+            const container = document.getElementById('bubble-container');
+            container.innerHTML = "";
 
-        // ส่งบันทึกข้อมูลประจำกะ
-        document.getElementById('recordForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            if(SCRIPT_URL.includes("ใส่_URL")) { alert("กรุณาติดตั้งลิงก์ Web App ในโค้ดก่อนทำการบันทึกข้อมูล"); return; }
+            if(yRecords.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-500 py-12 bg-slate-950 rounded-2xl border border-slate-900 text-sm">ไม่พบข้อมูลการบันทึกในวันที่เลือก</div>`;
+                document.getElementById('sum-hours').innerHTML = `0 <span class="text-xs font-normal text-slate-500">ชม.</span>`;
+                document.getElementById('sum-shots').innerHTML = `0 <span class="text-xs font-normal text-slate-500">Shot</span>`;
+                document.getElementById('sum-perf').innerText = `0%`;
+                return;
+            }
 
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "⏳ ระบบกำลังส่งค่าไปที่ Google Sheets...";
+            let totalMins = 0, totalShots = 0, totalPerf = 0;
 
-            const payload = {
-                date: document.getElementById('date').value,
-                machine_id: document.getElementById('machine_id').value,
-                total_items: document.getElementById('total_items').value,
-                total_shots: document.getElementById('total_shots').value,
-                total_pieces: document.getElementById('total_pieces').value,
-                total_time: document.getElementById('total_time').value,
-                actual_work_time: document.getElementById('actual_work_time').value,
-                lost_time: document.getElementById('lost_time').value,
-                issue_no: document.getElementById('issue_no').value,
-                issue_detail: document.getElementById('issue_detail').value,
-                note: "-" // ยุบกล่องหมายเหตุทิ้งแล้ว ส่งขีดกลางไปแทนเพื่อไม่ให้ชีทเอ๋อ
-            };
+            yRecords.forEach(rec => {
+                const mInfo = globalData.machines.find(m => m.id === rec.machine_id) || { name: "เครื่องภายนอก", operator: "ไม่ระบุ", target: 0 };
+                
+                totalMins += Number(rec.work_mins);
+                totalShots += Number(rec.shots);
+                
+                let perfNum = parseFloat(rec.perf);
+                if(isNaN(perfNum)) perfNum = 0;
+                if(perfNum <= 1 && perfNum > 0) perfNum = perfNum * 100;
+                totalPerf += perfNum;
 
-            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
-            .then(r => r.json()).then(d => {
-                if(d.status === "success"){
-                    alert("✅ บันทึกข้อมูลเข้าตารางเรียบร้อยแล้ว!");
-                    document.getElementById('recordForm').reset();
-                    document.getElementById('date').valueAsDate = new Date();
-                    fetchData();
-                    switchTab('dashboard');
-                } else {
-                    alert("❌ เกิดข้อผิดพลาดของสคริปต์: " + d.msg);
-                }
-            }).catch(e => alert("❌ ไม่สามารถส่งชุดข้อมูลไปยังคลาวด์ได้"))
-            .finally(() => {
-                btn.disabled = false; btn.innerText = "💾 บันทึกข้อมูลเข้าระบบ";
-            });
-        });
+                let actualRate = 0;
+                if (rec.work_mins > 0) {
+                    actualRate = (rec.shots * 60) / rec.work_mins;
+                }
+                
+                let targetRate = Number(mInfo.target) || 0;
+                let diffRate = actualRate - targetRate;
+                
+                let diffColor = "text-yellow-500";
+                let diffIcon = "⚡";
+                let diffText = "ตามเป้า";
+                
+                if (diffRate > 0) {
+                    diffColor = "text-green-400";
+                    diffIcon = "📈";
+                    diffText = `เร็วกว่าเป้า +${diffRate.toFixed(1)}`;
+                } else if (diffRate < 0) {
+                    diffColor = "text-red-400";
+                    diffIcon = "📉";
+                    diffText = `ช้ากว่าเป้า ${Math.abs(diffRate).toFixed(1)}`;
+                }
 
-        // ============= ส่วนของการ Export =============
-        function getFilteredRecords() {
-            const period = document.getElementById('export-period').value;
-            let filtered = [];
-            
-            if(period === 'yesterday') filtered = globalData.records.filter(r => r.date === getYesterdayString());
-            else if(period === 'today') filtered = globalData.records.filter(r => r.date === getTodayString());
-            else if(period === 'all') filtered = globalData.records;
-            else {
-                const t = new Date();
-                const monthStr = t.getFullYear() + "-" + String(t.getMonth()+1).padStart(2,'0');
-                if(period === 'month') {
-                    filtered = globalData.records.filter(r => r.date.startsWith(monthStr));
-                } else {
-                    filtered = globalData.records; 
-                }
-            }
-            return filtered;
-        }
+                // ดึงปัญหามาโชว์เสมอถ้ามีการกรอกไว้ (แม้ lost_time จะเป็น 0)
+                const hasIssue = rec.lost_mins > 0 || (rec.issue && rec.issue !== "-" && rec.issue.trim() !== "");
 
-        function previewExport() {
-            const recs = getFilteredRecords();
-            document.getElementById('export-count').innerText = recs.length;
-        }
+                const card = document.createElement('div');
+                card.className = "glass-card p-4 rounded-2xl flex flex-col gap-2 shadow-md border-l-4 border-l-blue-500";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-slate-800 pb-2">
+                        <div>
+                            <div class="font-bold text-blue-400 text-base">${mInfo.name}</div>
+                            <div class="text-xs text-slate-400">ผู้รับผิดชอบ: ${mInfo.operator} <span class="text-[10px] text-slate-500">(${rec.machine_id})</span></div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-400">ได้จริง (เป้า ${targetRate})</div>
+                            <div class="font-bold text-white text-lg leading-tight">${actualRate.toFixed(1)} <span class="text-[10px] text-slate-400 font-normal">S/Hr</span></div>
+                            <div class="text-[11px] font-bold ${diffColor} mt-0.5">${diffIcon} ${diffText}</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                        <div><span class="text-slate-400">เวลาทำงานจริง:</span> <span class="text-yellow-500 font-bold">${rec.work_mins} นาที</span></div>
+                        <div><span class="text-slate-400">ผลผลิตสะสม:</span> <span class="text-white font-bold">${rec.shots.toLocaleString()} Shot</span></div>
+                        <div><span class="text-slate-400">จำนวนชิ้นงาน:</span> <span class="text-white">${rec.pieces.toLocaleString()} ชิ้น</span></div>
+                        <div><span class="text-slate-400">วิ่งงานรวม:</span> <span class="text-white">${rec.items} รายการ</span></div>
+                    </div>
+                    ${hasIssue ? `
+                        <div class="text-[11px] text-red-400 bg-red-950/30 p-2.5 rounded-xl border border-red-900/30 mt-1">
+                            <strong>⚠️ เวลาสูญเสีย:</strong> ${rec.lost_mins} นาที <br>
+                            <strong>ปัญหา [${rec.issue_no}]:</strong> ${rec.issue}
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(card);
+            });
 
-        function exportExcel() {
-            const recs = getFilteredRecords();
-            if(recs.length === 0) { alert("ไม่มีชุดข้อมูลที่พบในช่วงเวลาดังกล่าว"); return; }
+            document.getElementById('sum-hours').innerHTML = `${(totalMins/60).toFixed(1)} <span class="text-xs font-normal text-slate-500">ชม.</span>`;
+            document.getElementById('sum-shots').innerHTML = `${totalShots.toLocaleString()} <span class="text-xs font-normal text-slate-500">Shot</span>`;
+            document.getElementById('sum-perf').innerText = `${(totalPerf / yRecords.length).toFixed(0)}%`;
+        }
 
-            const exportData = recs.map(r => {
-                const m = globalData.machines.find(m => m.id === r.machine_id) || {};
-                let p = parseFloat(r.perf);
-                if(p <= 1 && p > 0) p = (p*100).toFixed(1)+'%';
-                else if(!isNaN(p)) p = p.toFixed(1)+'%';
-                
-                let actualRate = r.work_mins > 0 ? (r.shots * 60) / r.work_mins : 0;
+        document.getElementById('recordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if(SCRIPT_URL.includes("ใส่_URL")) { alert("กรุณาติดตั้งลิงก์ Web App ในโค้ดก่อนทำการบันทึกข้อมูล"); return; }
 
-                return {
-                    "วันที่ทำงาน": r.date,
-                    "ชื่อเครื่องจักร": m.name || r.machine_id,
-                    "พนักงานผู้รับผิดชอบ": m.operator || "-",
-                    "จำนวนรายการ (พาร์ท)": r.items,
-                    "ยอดรวม (Shot)": r.shots,
-                    "ยอดรวม (ชิ้น)": r.pieces,
-                    "เวลารวมเปิดเครื่อง (นาที)": r.total_time,
-                    "เวลาทำงานจริง (นาที)": r.work_mins,
-                    "เวลาสูญเสีย (นาที)": r.lost_mins,
-                    "ความเร็วจริง (Shot/Hr)": actualRate.toFixed(1),
-                    "ประสิทธิภาพการคำนวณ": p,
-                    "โค้ดปัญหา": r.issue_no,
-                    "รายละเอียดปัญหา": r.issue
-                };
-            });
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "⏳ ระบบกำลังส่งค่าไปที่ Google Sheets...";
 
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "รายงานบันทึกการทำงาน");
-            XLSX.writeFile(wb, `รายงานการผลิต_${document.getElementById('export-period').value}.xlsx`);
-        }
+            const payload = {
+                date: document.getElementById('date').value,
+                machine_id: document.getElementById('machine_id').value,
+                total_items: document.getElementById('total_items').value,
+                total_shots: document.getElementById('total_shots').value,
+                total_pieces: document.getElementById('total_pieces').value,
+                total_time: document.getElementById('total_time').value,
+                actual_work_time: document.getElementById('actual_work_time').value,
+                lost_time: document.getElementById('lost_time').value,
+                issue_no: document.getElementById('issue_no').value,
+                issue_detail: document.getElementById('issue_detail').value,
+                note: "-" 
+            };
 
-        function copyForLINE() {
-            const recs = getFilteredRecords();
-            if(recs.length === 0) { alert("ไม่พบข้อมูลที่จะทำการคัดลอก"); return; }
-            
-            let text = `📊 สรุปรายงานบันทึกการทำงาน (${document.getElementById('export-period').options[document.getElementById('export-period').selectedIndex].text})\n\n`;
-            
-            recs.forEach(r => {
-                const m = globalData.machines.find(m => m.id === r.machine_id) || {};
-                let actualRate = r.work_mins > 0 ? (r.shots * 60) / r.work_mins : 0;
-                
-                text += `🏭 เครื่อง: ${m.name || r.machine_id} (พนักงาน: ${m.operator || 'ไม่ระบุ'})\n`;
-                text += ` • ปริมาณ: ${r.shots} Shot | ทำงานจริง: ${r.work_mins} นาที\n`;
-                text += ` • ความเร็วเฉลี่ย: ${actualRate.toFixed(1)} Shot/ชม.\n`;
-                if(r.lost_mins > 0) text += ` • ⚠️ สูญเสียเวลา: ${r.lost_mins} นาที [ปัญหา: ${r.issue}]\n`;
-                text += `-----------------\n`;
-            });
+            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+            .then(r => r.json()).then(d => {
+                if(d.status === "success"){
+                    alert("✅ บันทึกข้อมูลเข้าตารางเรียบร้อยแล้ว!");
+                    document.getElementById('recordForm').reset();
+                    document.getElementById('date').valueAsDate = new Date();
+                    fetchData();
+                    switchTab('dashboard');
+                } else {
+                    alert("❌ เกิดข้อผิดพลาดของสคริปต์: " + d.msg);
+                }
+            }).catch(e => alert("❌ ไม่สามารถส่งชุดข้อมูลไปยังคลาวด์ได้"))
+            .finally(() => {
+                btn.disabled = false; btn.innerText = "💾 บันทึกข้อมูลเข้าระบบ";
+            });
+        });
 
-            navigator.clipboard.writeText(text).then(() => alert("📋 คัดลอกข้อความสรุปเรียบร้อย! สามารถเปิดแอป LINE แล้วกดวางลงกลุ่มได้ทันที"));
-        }
-    </script>
+        // ============= ส่วนของการ Export (อิงจากช่วงวันที่) =============
+        function getFilteredRecords() {
+            const startStr = document.getElementById('export-start').value;
+            const endStr = document.getElementById('export-end').value;
+            
+            // กรองข้อมูลที่อยู่ในช่วง Start ถึง End
+            return globalData.records.filter(r => {
+                return r.date >= startStr && r.date <= endStr;
+            });
+        }
+
+        function previewExport() {
+            const recs = getFilteredRecords();
+            document.getElementById('export-count').innerText = recs.length;
+        }
+
+        function exportExcel() {
+            const recs = getFilteredRecords();
+            if(recs.length === 0) { alert("ไม่มีชุดข้อมูลที่พบในช่วงเวลาดังกล่าว"); return; }
+
+            const exportData = recs.map(r => {
+                const m = globalData.machines.find(m => m.id === r.machine_id) || {};
+                let p = parseFloat(r.perf);
+                if(p <= 1 && p > 0) p = (p*100).toFixed(1)+'%';
+                else if(!isNaN(p)) p = p.toFixed(1)+'%';
+                
+                let actualRate = r.work_mins > 0 ? (r.shots * 60) / r.work_mins : 0;
+
+                return {
+                    "วันที่ทำงาน": r.date,
+                    "ชื่อเครื่องจักร": m.name || r.machine_id,
+                    "พนักงานผู้รับผิดชอบ": m.operator || "-",
+                    "จำนวนรายการ (พาร์ท)": r.items,
+                    "ยอดรวม (Shot)": r.shots,
+                    "ยอดรวม (ชิ้น)": r.pieces,
+                    "เวลารวมเปิดเครื่อง (นาที)": r.total_time,
+                    "เวลาทำงานจริง (นาที)": r.work_mins,
+                    "เวลาสูญเสีย (นาที)": r.lost_mins,
+                    "ความเร็วจริง (Shot/Hr)": actualRate.toFixed(1),
+                    "ประสิทธิภาพการคำนวณ": p,
+                    "โค้ดปัญหา": r.issue_no,
+                    "รายละเอียดปัญหา": r.issue
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "รายงานบันทึกการทำงาน");
+            
+            const startDate = document.getElementById('export-start').value;
+            const endDate = document.getElementById('export-end').value;
+            XLSX.writeFile(wb, `รายงานผลิต_${startDate}_ถึง_${endDate}.xlsx`);
+        }
+
+        // ============= จัดรูปแบบ ก๊อปส่ง LINE แบบกลุ่มตามชื่อเครื่อง =============
+        function copyForLINE() {
+            const recs = getFilteredRecords();
+            if(recs.length === 0) { alert("ไม่พบข้อมูลที่จะทำการคัดลอก"); return; }
+            
+            const startDate = document.getElementById('export-start').value.split('-').reverse().join('/');
+            const endDate = document.getElementById('export-end').value.split('-').reverse().join('/');
+            
+            let text = `📊 สรุปรายงานบันทึกการทำงาน\n📅 ${startDate} ถึง ${endDate}\n\n`;
+            
+            // 1. จัดกลุ่มข้อมูลแยกตามรหัสเครื่องจักร
+            const groupedRecords = {};
+            recs.forEach(r => {
+                if(!groupedRecords[r.machine_id]) {
+                    groupedRecords[r.machine_id] = [];
+                }
+                groupedRecords[r.machine_id].push(r);
+            });
+
+            // 2. วนลูปสร้างข้อความทีละเครื่อง
+            for (const machine_id in groupedRecords) {
+                const machineRecords = groupedRecords[machine_id];
+                const mInfo = globalData.machines.find(m => m.id === machine_id) || { name: machine_id, operator: "ไม่ระบุ" };
+                
+                text += `🏭 เครื่อง: ${mInfo.name} (พนักงาน: ${mInfo.operator})\n`;
+                
+                // เรียงวันที่จากเก่าไปใหม่
+                machineRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                machineRecords.forEach(r => {
+                    // แปลงวันที่ YYYY-MM-DD เป็น DD/MM/YY
+                    const dateParts = r.date.split('-');
+                    const dateStr = `${dateParts[2]}/${dateParts[1]}/${dateParts[0].substring(2)}`;
+                    
+                    let actualRate = r.work_mins > 0 ? (r.shots * 60) / r.work_mins : 0;
+                    
+                    text += ` • วันที่ ${dateStr}: ทำได้ ${r.shots.toLocaleString()} Shot\n`;
+                    
+                    // แทรกปัญหาหากมีการกรอก
+                    const hasIssue = r.lost_mins > 0 || (r.issue && r.issue !== "-" && r.issue.trim() !== "");
+                    if(hasIssue) {
+                        text += `   ⚠️ ปัญหา: ${r.issue} (สูญเสีย ${r.lost_mins} นาที)\n`;
+                    }
+                });
+                text += `-----------------\n`;
+            }
+
+            navigator.clipboard.writeText(text).then(() => alert("📋 คัดลอกข้อความสรุปเรียบร้อย! สามารถเปิดแอป LINE แล้วกดวางลงกลุ่มได้ทันที"));
+        }
+    </script>
 </body>
 </html>
+
