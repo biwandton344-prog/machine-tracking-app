@@ -458,44 +458,79 @@
         }
 
         function copyForLINE() {
-            const recs = getFilteredRecords();
-            if(recs.length === 0) { alert("ไม่พบข้อมูลที่จะทำการคัดลอกครับ"); return; }
-            
-            const startDate = document.getElementById('export-start').value.split('-').reverse().join('/');
-            const endDate = document.getElementById('export-end').value.split('-').reverse().join('/');
-            
-            let text = `📊 สรุปรายงานบันทึกการทำงาน\n📅 ตั้งแต่ ${startDate} ถึง ${endDate}\n\n`;
-            
-            const groupedRecords = {};
-            recs.forEach(r => {
-                if(!groupedRecords[r.machine_id]) groupedRecords[r.machine_id] = [];
-                groupedRecords[r.machine_id].push(r);
+    const recs = getFilteredRecords();
+
+    if (recs.length === 0) {
+        alert("ไม่พบข้อมูลที่จะทำการคัดลอกครับ");
+        return;
+    }
+
+    const startDate = document.getElementById('export-start').value.split('-').reverse().join('/');
+    const endDate = document.getElementById('export-end').value.split('-').reverse().join('/');
+
+    let text = `📊 สรุปผลการผลิต\n`;
+    text += `📅 ${startDate} - ${endDate}\n\n`;
+
+    const grouped = {};
+
+    recs.forEach(r => {
+
+        if (!grouped[r.machine_id]) {
+
+            const m = globalData.machines.find(x => x.id === r.machine_id) || {};
+
+            grouped[r.machine_id] = {
+                machine: m.name || r.machine_id,
+                operator: m.operator || "-",
+                shots: 0,
+                pieces: 0,
+                workMins: 0
+            };
+        }
+
+        grouped[r.machine_id].shots += Number(r.shots);
+        grouped[r.machine_id].pieces += Number(r.pieces);
+        grouped[r.machine_id].workMins += Number(r.work_mins);
+
+    });
+
+    Object.values(grouped).forEach(g => {
+
+        const hours = (g.workMins / 60);
+
+        const shotPerHour = g.workMins > 0
+            ? ((g.shots * 60) / g.workMins)
+            : 0;
+
+        text += `🏭 เครื่อง : ${g.machine}\n`;
+        text += `👤 พนักงาน : ${g.operator}\n`;
+        text += `🎯 ผลิตได้ : ${g.shots.toLocaleString()} Shot\n`;
+        text += `📦 จำนวนชิ้น : ${g.pieces.toLocaleString()} ชิ้น\n`;
+        text += `⏱️ เวลาทำงาน : ${g.workMins.toLocaleString()} นาที (${hours.toFixed(1)} ชม.)\n`;
+        text += `⚡ ผลิตได้ : ${shotPerHour.toFixed(1)} Shot/ชม.\n`;
+        text += `──────────────────\n`;
+
+    });
+
+    if (navigator.clipboard) {
+
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                alert("📋 คัดลอกข้อความเรียบร้อย");
             });
 
-            for (const machine_id in groupedRecords) {
-                const machineRecords = groupedRecords[machine_id];
-                const mInfo = globalData.machines.find(m => m.id === machine_id) || { name: machine_id, operator: "ไม่ระบุ" };
-                
-                text += `(เครื่อง ${mInfo.name} พนักงาน ${mInfo.operator}\n`;
-                
-                machineRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
-                
-                machineRecords.forEach(r => {
-                    const dateParts = r.date.split('-');
-                    const dateStr = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                    
-                    text += `วันที่ ${dateStr} ทำได้ ${r.shots.toLocaleString()} Shot\n`;
-                    
-                    const hasIssue = r.lost_mins > 0 || (r.issue && r.issue !== "-" && r.issue.trim() !== "");
-                    if(hasIssue) {
-                        text += `   ⚠️ ปัญหา: ${r.issue} (เสียเวลา ${r.lost_mins} นาที)\n`;
-                    }
-                });
-                text += `)\n-----------------\n`;
-            }
+    } else {
 
-            navigator.clipboard.writeText(text).then(() => alert("📋 คัดลอกข้อความสรุปเรียบร้อย! นำไปวางในกลุ่ม LINE ได้ทันทีครับ"));
-        }
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+
+        alert("📋 คัดลอกข้อความเรียบร้อย");
+    }
+}
     </script>
 </body>
 </html>
